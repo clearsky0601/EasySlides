@@ -9,3 +9,4 @@ staticfiles/
 *.pid
 .DS_Store
 .idea/
+.claude/
