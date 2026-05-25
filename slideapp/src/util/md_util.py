@@ -1,5 +1,32 @@
 import re
+import uuid
 from typing import List, Union
+
+
+_MATH_PATTERN = re.compile(
+    r"(\$\$[\s\S]*?\$\$)"
+    r"|"
+    r"(\$(?!\s)(?:[^\$\\]|\\.)*(?<!\s)\$)",
+)
+
+
+def _protect_math(md: str):
+    placeholders: dict[str, str] = {}
+
+    def _replace(m: re.Match) -> str:
+        token = m.group(0)
+        key = f"\x00MATH{uuid.uuid4().hex}\x00"
+        placeholders[key] = token
+        return key
+
+    safe = _MATH_PATTERN.sub(_replace, md)
+    return safe, placeholders
+
+
+def _restore_math(html: str, placeholders: dict[str, str]) -> str:
+    for key, original in placeholders.items():
+        html = html.replace(key, original)
+    return html
 
 
 def process_images(content, func):
@@ -67,4 +94,6 @@ def md_to_html(md: str) -> str:
         "tables",
         "toc",
     ]
-    return markdown(md, extensions=extensions)
+    safe_md, placeholders = _protect_math(md)
+    html = markdown(safe_md, extensions=extensions)
+    return _restore_math(html, placeholders)
