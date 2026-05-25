@@ -50,7 +50,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
-
+    'slideapp.middleware.AutoLoginMiddleware',
 ]
 
 ROOT_URLCONF = "jyy_slide_web.urls"
