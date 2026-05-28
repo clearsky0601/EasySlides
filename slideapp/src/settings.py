@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 
 from jinja2 import Template
