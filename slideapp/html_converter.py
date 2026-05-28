@@ -10,8 +10,13 @@ from .models import Slide
 from .src.converter import converter
 
 
+# Bump when the rendering pipeline changes in a way that would invalidate
+# previously cached HTML for unchanged Markdown (e.g. new directive support).
+RENDER_VERSION = "2"
+
+
 @lru_cache(maxsize=64)
-def _convert_raw(content_hash, markdown_content):
+def _convert_raw(version, content_hash, markdown_content):
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_md = os.path.join(temp_dir, 'temp.md')
         with open(temp_md, 'w', encoding='utf-8') as f:
@@ -40,15 +45,16 @@ def _convert_raw(content_hash, markdown_content):
 def convert_markdown(markdown_content):
     """Convert markdown to HTML with in-memory LRU cache. Raises on failure."""
     content_hash = Slide.compute_content_hash(markdown_content)
-    return _convert_raw(content_hash, markdown_content)
+    return _convert_raw(RENDER_VERSION, content_hash, markdown_content)
 
 
 def convert_and_cache(slide, markdown_content):
     """Convert markdown and persist the result on the Slide model. Raises on failure."""
     content_hash = Slide.compute_content_hash(markdown_content)
-    if slide.content_hash == content_hash and slide.html_cache:
+    cache_key = f"{RENDER_VERSION}:{content_hash}"
+    if slide.content_hash == cache_key and slide.html_cache:
         return slide.html_cache
 
-    html = _convert_raw(content_hash, markdown_content)
-    Slide.objects.filter(id=slide.id).update(html_cache=html, content_hash=content_hash)
+    html = _convert_raw(RENDER_VERSION, content_hash, markdown_content)
+    Slide.objects.filter(id=slide.id).update(html_cache=html, content_hash=cache_key)
     return html

@@ -173,3 +173,23 @@ section .center {
 .reveal li {
     margin-top: 10px;
 }
+
+.reveal .md-columns {
+    display: grid;
+    gap: 1.5rem;
+    align-items: start;
+    margin: 0.5rem 0;
+}
+
+.reveal .md-columns > .md-column {
+    min-width: 0;
+}
+
+.reveal .md-columns > .md-column > :first-child {
+    margin-top: 0;
+}
+
+.reveal .md-columns img {
+    max-width: 100%;
+    height: auto;
+}

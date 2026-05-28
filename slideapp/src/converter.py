@@ -51,6 +51,10 @@ def process_html_elements(before_html):
     e = page
     for item in e("h1").parent():
         t = PyQuery(item)
+        # Skip h1s inside a ::: columns ::: block — wrapping the column in
+        # .center.middle (height:728px) would blow up the grid layout.
+        if t.parents(".md-columns"):
+            continue
         t.wrap("<div style='width:100%'>")
         t.wrap("<div class='center middle'>")
     class_data = {

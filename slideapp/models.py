@@ -35,7 +35,7 @@ class Slide(models.Model):
     lock = models.BooleanField(default=True)
     version = models.IntegerField(default=0)
     html_cache = models.TextField(blank=True, default='')
-    content_hash = models.CharField(max_length=32, blank=True, default='')
+    content_hash = models.CharField(max_length=64, blank=True, default='')
 
     class Meta:
         ordering = ('sort_order', '-updated_at', '-id')

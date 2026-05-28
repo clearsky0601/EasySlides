@@ -280,7 +280,33 @@ def hello():
 - 行间：`$$\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$`（独占一行）
 - 支持 `\begin{aligned}` `\begin{cases}` `\begin{pmatrix}` 等环境
 
-### 两栏布局（Tailwind）
+### 分栏布局（`:::columns`，推荐）
+
+Markdown 原生左右/多列布局，比 Tailwind 写法更短，输出统一走 CSS Grid：
+
+```markdown
+::: columns 40/60
+::: column
+左侧 Markdown（列表、代码、公式、图片都行）
+:::
+::: column
+右侧 Markdown 或图片
+:::
+:::
+```
+
+要点：
+- `::: columns RATIO` 开块；`::: column` 开列；`:::` 关。三种指令行都**独占一行**（允许行首/尾空白）。
+- 比例任意，用 CSS Grid `fr` 自动归一化：`40/60`、`1/2`、`30/30/40` 都行；**省略比例**则按列数均分。
+- 列数任意（写几个 `::: column` 就是几列）。
+- 列内可嵌套 ul / table / code-fence / `$...$` / `<img>` / blockquote，无限制。
+- **必须在同一张幻灯片内闭合**，不能跨 `---` / `----`（跨页会触发降级，整块按普通 Markdown 显示）。
+- 代码栅栏内的 `::: columns` 字面量原样保留，不会被误解析。
+- 未闭合时降级为普通 Markdown，**不报错**。
+
+> 简单分栏（左文右图 / 多列对照）优先用 `:::columns`；需要自定义背景色、border、`mt-*`/`px-*` 等才走下面的 Tailwind 写法。
+
+### 两栏布局（Tailwind，进阶）
 
 框架内嵌了 Tailwind CSS，可直接在 Markdown 中用 HTML 容器做多栏布局：
 
@@ -466,6 +492,8 @@ claude
 - [ ] 图片是否用 `<img>` 控制了对齐和大小？
 - [ ] 表格表头分隔行是否完整？
 - [ ] 子页内容是否过满（超一屏）？
+- [ ] 用到 `:::columns` 时，外层 `:::` 与每个 `::: column ... :::` 是否都已闭合，且**全部位于同一张幻灯片**（未跨 `---` / `----`）？
+- [ ] `::: columns RATIO` / `::: column` / `:::` 是否都**独占一行**？
 - [ ] 文档是否以 Thanks / Q&A 页收尾？
 
 ## 工作流程
@@ -495,3 +523,5 @@ claude
 - Mermaid / PlantUML / 自定义组件——用图片或 ASCII 图替代
 - `<hr>` 渲染为"空行"不是横线
 - `++++` 渐变页只在同一组垂直幻灯片内生效
+- `:::columns` 必须在单张幻灯片内闭合，**不能跨 `---` / `----`**（跨页会触发降级，整块按普通 Markdown 显示）
+- `:::` 围栏目前**仅支持 `columns` / `column`** 两个关键字，没有 `::: note` / `::: warning` 等其他 directive
