@@ -79,7 +79,9 @@ WSGI_APPLICATION = "easy_slides.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        # SLIDES_DB lets tools (e.g. the slide_tui previewer) point the server
+        # at an alternate sqlite file. Unset → original behaviour (db.sqlite3).
+        "NAME": os.environ.get("SLIDES_DB") or (BASE_DIR / "db.sqlite3"),
     }
 }
 
