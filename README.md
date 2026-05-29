@@ -1,6 +1,7 @@
 <div align="center">
+![tubiao](media/tubiao.png)
 
-# 🎨 jyySlideWeb
+# 🎨 EazySlides
 
 ### 在浏览器里用 Markdown 写出 [jyy 老师](https://jyywiki.cn) 同款风格的 Reveal.js 幻灯片
 
@@ -167,7 +168,7 @@ python3 $SD publish <id>                                          # 解锁公开
 
 <br>
 
-在 [release](https://github.com/xieyumc/jyySlideWeb/releases) 页面下载 `jyy_slide_web.zip`，**完整解压**（不要只解压 exe），打开 `jyy_slide_web.exe` 即可运行。
+在 [release](https://github.com/xieyumc/jyySlideWeb/releases) 页面下载 `eazy_slides.zip`，**完整解压**（不要只解压 exe），打开 `eazy_slides.exe` 即可运行。
 
 > ⚠️ 这种方式实时转换效率较低、转换较慢，正在尝试解决，欢迎 PR。
 
@@ -225,7 +226,7 @@ docker-compose up
 # 2. 安装依赖
 pip install -r requirements.txt
 # 3. 启动（本地端口 10001）
-daphne -p 10001 jyy_slide_web.asgi:application
+daphne -p 10001 eazy_slides.asgi:application
 ```
 
 接下来参考 [快速上手](#-快速上手)。

@@ -1,7 +1,7 @@
 services:
-  jyy_slide_web:
-    image: mona233/jyy_slide_web:latest
-    container_name: jyy_slide_web
+  eazy_slides:
+    image: mona233/eazy_slides:latest
+    container_name: eazy_slides
     ports:
       - "10001:10001"
     volumes:

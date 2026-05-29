@@ -32,4 +32,4 @@ else:
     print('Superuser already exists, skipping creation')
 "
 
-exec python -m daphne -b 0.0.0.0 -p "$PORT" jyy_slide_web.asgi:application
+exec python -m daphne -b 0.0.0.0 -p "$PORT" eazy_slides.asgi:application

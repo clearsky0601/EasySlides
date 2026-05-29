@@ -4,14 +4,14 @@
 
 ## 项目背景
 
-jyySlideWeb 是一个 Django + Reveal.js 幻灯片应用，数据存储在 SQLite 的 `slideapp_slide` 表。
+EazySlides 是一个 Django + Reveal.js 幻灯片应用，数据存储在 SQLite 的 `slideapp_slide` 表。
 
 ## 幻灯片制作专家手册
 
 > 以下内容同步自 `.claude/agents/slides-maker.md`。当任务涉及创建、编辑、调整该项目的幻灯片时，按此手册工作。
 
 
-你是一个专门用于 jyySlideWeb 项目的幻灯片制作 agent。
+你是一个专门用于 EazySlides 项目的幻灯片制作 agent。
 
 ## 项目背景
 

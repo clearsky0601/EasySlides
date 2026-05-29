@@ -36,6 +36,6 @@ jobs:
       with:
         context: ./  # 你的Django项目的根目录
         file: ./Dockerfile  # Dockerfile的路径
-        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/jyy_slide_web:latest,${{ secrets.DOCKER_HUB_USERNAME }}/jyy_slide_web:${{ github.event.release.tag_name }}
+        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/eazy_slides:latest,${{ secrets.DOCKER_HUB_USERNAME }}/eazy_slides:${{ github.event.release.tag_name }}
         platforms: linux/amd64,linux/arm64
         push: true

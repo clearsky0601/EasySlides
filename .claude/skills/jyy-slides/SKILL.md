@@ -1,11 +1,11 @@
 ---
 name: jyy-slides
-description: 在 jyySlideWeb 项目中创建、编辑、管理 jyy 风格的 Reveal.js 幻灯片（jyyslide-md 方言），直接读写 SQLite `db.sqlite3` 的 slideapp_slide 表。Use when the user wants to make / write / edit / 创建 / 修改 / 生成 slides 或幻灯片 in this repo, draft jyy 风格 presentations, manage the slideapp_slide table, publish/unlock a slide, or work with jyyslide-md Markdown syntax (分隔符 / :::columns / :::tip / timeline / KaTeX 等).
+description: 在 EazySlides 项目中创建、编辑、管理 jyy 风格的 Reveal.js 幻灯片（jyyslide-md 方言），直接读写 SQLite `db.sqlite3` 的 slideapp_slide 表。Use when the user wants to make / write / edit / 创建 / 修改 / 生成 slides 或幻灯片 in this repo, draft jyy 风格 presentations, manage the slideapp_slide table, publish/unlock a slide, or work with jyyslide-md Markdown syntax (分隔符 / :::columns / :::tip / timeline / KaTeX 等).
 ---
 
 # jyy-slides
 
-在本项目（jyySlideWeb，Django + Reveal.js）里创建和管理 jyy 风格幻灯片。内容用 jyyslide-md 方言 Markdown 编写，经 Python-Markdown → HTML → Reveal.js 渲染，存在项目根 `db.sqlite3` 的 `slideapp_slide` 表。画布 1024×768；Tailwind CSS 内嵌；KaTeX 渲染公式；`codehilite` 做代码高亮。
+在本项目（EazySlides，Django + Reveal.js）里创建和管理 jyy 风格幻灯片。内容用 jyyslide-md 方言 Markdown 编写，经 Python-Markdown → HTML → Reveal.js 渲染，存在项目根 `db.sqlite3` 的 `slideapp_slide` 表。画布 1024×768；Tailwind CSS 内嵌；KaTeX 渲染公式；`codehilite` 做代码高亮。
 
 ## 语法权威：先读 SLIDE_SYNTAX.md
 
@@ -64,13 +64,13 @@ python3 $SD delete <id>                 # 删除
 
 ### 渲染相关（可选）
 
-幻灯片在网页首次访问时自动渲染并缓存。若需立即强制重渲（如语法管线刚改过），用 venv 跑：
+幻灯片在网页首次访问时自动渲染并缓存。若需立即强制重渲（如语法管线刚改过），用 venv 跑（`render` 会 `django.setup()`，须让项目根在 `PYTHONPATH` 上，否则报 `No module named 'eazy_slides'`）：
 
 ```bash
-.venv/bin/python .claude/skills/jyy-slides/scripts/slide_db.py render <id>
+PYTHONPATH=. .venv/bin/python .claude/skills/jyy-slides/scripts/slide_db.py render <id>
 ```
 
-它走 `slideapp.html_converter.convert_and_cache`，刷新 `html_cache` 与 `content_hash`。
+它走 `slideapp.html_converter.convert_and_cache`，刷新 `html_cache` 与 `content_hash`。（`list`/`get`/`create`/`update` 等纯 SQLite 操作不需要 `PYTHONPATH`，只有 `render` 需要。）
 
 ## 工作流程
 

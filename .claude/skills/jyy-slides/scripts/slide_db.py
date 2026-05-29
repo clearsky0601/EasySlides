@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Safe CRUD helper for the jyySlideWeb `slideapp_slide` table.
+"""Safe CRUD helper for the EazySlides `slideapp_slide` table.
 
 Reads/writes slide content via files or stdin so Markdown with quotes,
 newlines, and `:::` directives never needs shell escaping. The DB path
@@ -156,7 +156,7 @@ def cmd_render(args):
     import os
     import django
 
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "jyy_slide_web.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eazy_slides.settings")
     django.setup()
     from slideapp.models import Slide  # noqa: E402
     from slideapp.html_converter import convert_and_cache  # noqa: E402

@@ -28,11 +28,11 @@ jobs:
       - name: Compile with PyInstaller
         run: |
           pip install pyinstaller
-          pyinstaller jyy_slide_web.spec
+          pyinstaller eazy_slides.spec
 
       - name: Compress output folder
         run: |
-          Compress-Archive -Path './dist/jyy_slide_web/*' -DestinationPath './dist/jyy_slide_web.zip'
+          Compress-Archive -Path './dist/eazy_slides/*' -DestinationPath './dist/eazy_slides.zip'
 
       - name: Upload zip to release
         uses: actions/upload-release-asset@v1
@@ -40,6 +40,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./dist/jyy_slide_web.zip
-          asset_name: jyy_slide_web.zip
+          asset_path: ./dist/eazy_slides.zip
+          asset_name: eazy_slides.zip
           asset_content_type: application/zip

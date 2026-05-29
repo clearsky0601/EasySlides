@@ -1,12 +1,12 @@
 #!/bin/bash
 set -e
 
-# 部署脚本 - jyySlideWeb
+# 部署脚本 - EazySlides
 
-echo "开始部署 jyySlideWeb..."
+echo "开始部署 EazySlides..."
 
 # 进入项目目录
-cd ~/workspace/jyySlideWeb-main
+cd ~/workspace/EazySlides
 
 # 检查Python版本
 echo "Python版本: $(python3 --version)"
@@ -31,8 +31,8 @@ python manage.py migrate --noinput
 # 启动服务
 echo "启动服务..."
 echo "服务将在端口10001启动"
-daphne -b 0.0.0.0 -p 10001 jyy_slide_web.asgi:application &
-echo $! > jyySlideWeb.pid
-echo "服务已启动，PID: $(cat jyySlideWeb.pid)"
+daphne -b 0.0.0.0 -p 10001 eazy_slides.asgi:application &
+echo $! > EazySlides.pid
+echo "服务已启动，PID: $(cat EazySlides.pid)"
 
 echo "部署完成！访问 http://localhost:10001"

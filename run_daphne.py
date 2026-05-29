@@ -14,10 +14,10 @@ def open_browser():
 
 if __name__ == '__main__':
     os.chdir(PROJECT_ROOT)
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jyy_slide_web.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eazy_slides.settings')
 
     # 启动线程来打开浏览器
     threading.Thread(target=open_browser).start()
 
     # 运行 Daphne 服务器
-    CommandLineInterface().run(['-b', '0.0.0.0', '-p', '10001', 'jyy_slide_web.asgi:application'])
+    CommandLineInterface().run(['-b', '0.0.0.0', '-p', '10001', 'eazy_slides.asgi:application'])
