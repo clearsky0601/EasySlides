@@ -12,8 +12,6 @@
 ![realtime-preview.gif](staticfiles/img/realtime-preview.gif)
 >幻灯片自动切换到正在编辑位置：右边幻灯片预览会和左边编辑位置实时对应，方便查看效果
 
-<br><br>
-
 
 ![auto-save.png](staticfiles/img/auto-save.png)
 > 自动保存：编辑幻灯片时每分钟都会自动保存一次，并且在关闭窗口，返回主页时都会自动保存
@@ -68,6 +66,26 @@
 同时启用了一批 Markdown 扩展：`==高亮==`、`H~2~O` 下标、`E=mc^2^` 上标、`:rocket:` emoji 短代码、`- [x]` 任务列表、`[^1]` 脚注、定义列表。
 
 完整语法手册见 [SLIDE_SYNTAX.md](SLIDE_SYNTAX.md)；新建幻灯片时的默认模板里也带有所有方言的范例。
+
+<br><br>
+
+
+## 用 AI 写幻灯片：jyy-slides Claude Code Skill
+
+仓库内置了一个 [Claude Code](https://docs.claude.com/en/docs/claude-code) skill —— [`.claude/skills/jyy-slides`](.claude/skills/jyy-slides)，让 LLM 直接按 jyy 方言写稿并落库。
+
+- **自动遵循语法**：skill 以 [SLIDE_SYNTAX.md](SLIDE_SYNTAX.md) 为唯一权威，内置分隔符禁区与生成前自检清单，避免最常见的解析翻车。
+- **安全读写数据库**：附带 `scripts/slide_db.py`，对 `slideapp_slide` 表做 list / get / create / update / delete / publish，从文件或 stdin 读 content，规避引号转义并正确填充 `html_cache` / `content_hash`。
+
+```bash
+SD=.claude/skills/jyy-slides/scripts/slide_db.py
+python3 $SD list                                                  # 列出全部幻灯片
+python3 $SD create --title "标题" --category demo --file slide.md  # 从文件建一张
+python3 $SD update <id> --file slide.md                           # 覆盖内容
+python3 $SD publish <id>                                          # 解锁公开
+```
+
+在仓库目录里用 Claude Code 说「帮我做一份关于 X 的幻灯片」即可触发。
 
 <br><br>
 
