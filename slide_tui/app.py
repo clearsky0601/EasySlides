@@ -11,7 +11,6 @@ import webbrowser
 from rich.markup import escape
 
 from slide_tui import clack, db
-from slide_tui.clack import console
 from slide_tui.db import REPO_ROOT, SlideRow
 from slide_tui.server import DaphneServer
 
@@ -46,15 +45,15 @@ class SlidePreviewer:
             "数据库",
             f"{db.display_name(self.current_db)}  ·  {self.server.status_line()}",
         )
-        console.print(
+        clack.print_line(
             f"[grey42]{clack.S_BAR}[/]        [grey54]{self.current_db}  ·  "
             f"{len(self.rows)} 张幻灯片[/]"
         )
         if self.server.warning:
-            console.print(f"[grey42]{clack.S_BAR}[/]")
+            clack.print_line(f"[grey42]{clack.S_BAR}[/]")
             clack.warn(self.server.warning)
         if self.flash:
-            console.print(f"[grey42]{clack.S_BAR}[/]")
+            clack.print_line(f"[grey42]{clack.S_BAR}[/]")
             clack.submit(self.flash)
 
     # -- data --------------------------------------------------------------
@@ -135,7 +134,7 @@ class SlidePreviewer:
                 parts.append(f"[reverse bold {clack.ACCENT}] {label} {count} [/]")
             else:
                 parts.append(f"[grey54] {label} {count} [/]")
-        console.print(f"[grey42]{clack.S_BAR}[/]  " + "  ".join(parts))
+        clack.print_line(f"[grey42]{clack.S_BAR}[/]  " + "  ".join(parts))
         clack.bar()
 
     def _slide_label(self, row: SlideRow) -> str:

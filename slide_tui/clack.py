@@ -54,32 +54,59 @@ def clear() -> None:
     sys.stdout.flush()
 
 
+def _begin_repaint() -> None:
+    sys.stdout.write("\x1b[?25l\x1b[H")
+    sys.stdout.flush()
+
+
+def _end_repaint() -> None:
+    sys.stdout.write("\x1b[J")
+    sys.stdout.flush()
+
+
+def _show_cursor() -> None:
+    sys.stdout.write("\x1b[?25h")
+    sys.stdout.flush()
+
+
+def _clear_current_line() -> None:
+    sys.stdout.write("\r\x1b[2K")
+
+
+def print_line(markup: str = "") -> None:
+    for line in str(markup).splitlines() or [""]:
+        _clear_current_line()
+        console.print(line, no_wrap=True, overflow="crop")
+
+
 def bar() -> None:
-    console.print(f"[{GUTTER}]{S_BAR}[/]")
+    print_line(f"[{GUTTER}]{S_BAR}[/]")
 
 
 def intro(title: str) -> None:
-    console.print(f"[{GUTTER}]{S_BAR_START}[/]  [{ACCENT} bold]{title}[/]")
+    print_line(f"[{GUTTER}]{S_BAR_START}[/]  [{ACCENT} bold]{title}[/]")
 
 
 def info(label: str, value: str = "") -> None:
     line = f"[{GREEN}]{S_INFO}[/]  {label}"
     if value:
         line += f"  [bold]{value}[/]"
-    console.print(line)
+    print_line(line)
 
 
 def submit(message: str) -> None:
-    console.print(f"[{GREEN}]{S_STEP_SUBMIT}[/]  {message}")
+    for i, line in enumerate(str(message).splitlines() or [""]):
+        prefix = f"[{GREEN}]{S_STEP_SUBMIT}[/]  " if i == 0 else f"[{GUTTER}]{S_BAR}[/]     "
+        print_line(f"{prefix}{line}")
 
 
 def warn(message: str) -> None:
-    console.print(f"[{YELLOW}]{S_WARN}[/]  [{YELLOW}]{message}[/]")
+    print_line(f"[{YELLOW}]{S_WARN}[/]  [{YELLOW}]{message}[/]")
 
 
 def outro(message: str) -> None:
     bar()
-    console.print(f"[{GUTTER}]{S_BAR_END}[/]  {message}")
+    print_line(f"[{GUTTER}]{S_BAR_END}[/]  {message}")
 
 
 # -- raw key input ---------------------------------------------------------
@@ -149,57 +176,70 @@ def select(
     else:
         idx = max(0, min(start_index, len(options) - 1))
 
-    while True:
-        clear()
-        render_header()
-        bar()
-        head = f"[{CYAN}]{S_STEP_ACTIVE}[/]  [bold]{title}[/]"
-        if hint:
-            head += f"   [{DIM}]{hint}[/]"
-        console.print(head)
-        bar()
-        if render_before_options is not None:
-            render_before_options()
+    clear()
+    try:
+        while True:
+            _begin_repaint()
+            render_header()
+            bar()
+            head = f"[{CYAN}]{S_STEP_ACTIVE}[/]  [bold]{title}[/]"
+            if hint:
+                head += f"   [{DIM}]{hint}[/]"
+            print_line(head)
+            bar()
+            if render_before_options is not None:
+                render_before_options()
 
-        if not options:
-            console.print(f"[{GUTTER}]{S_BAR}[/]  [{DIM}]（空）[/]")
-        else:
-            win = _window_size(len(options))
-            start = _window_start(idx, len(options), win)
-            if start > 0:
-                console.print(f"[{GUTTER}]{S_BAR}[/]  [{DIM}]↑ 还有 {start} 项[/]")
-            for i in range(start, min(start + win, len(options))):
-                label = label_of(options[i])
-                if i == idx:
-                    console.print(
-                        f"[{GUTTER}]{S_BAR}[/]  [{GREEN}]{S_RADIO_ACTIVE}[/] {label}"
-                    )
-                else:
-                    console.print(
-                        f"[{GUTTER}]{S_BAR}[/]  [{DIM}]{S_RADIO_INACTIVE}[/] "
-                        f"[{DIM}]{label}[/]"
-                    )
-            rest = len(options) - (start + win)
-            if rest > 0:
-                console.print(f"[{GUTTER}]{S_BAR}[/]  [{DIM}]↓ 还有 {rest} 项[/]")
+            if not options:
+                print_line(f"[{GUTTER}]{S_BAR}[/]  [{DIM}]（空）[/]")
+            else:
+                win = _window_size(len(options))
+                start = _window_start(idx, len(options), win)
+                has_scroll = len(options) > win
+                if has_scroll and start > 0:
+                    print_line(f"[{GUTTER}]{S_BAR}[/]  [{DIM}]↑ 还有 {start} 项[/]")
+                elif has_scroll:
+                    bar()
+                for i in range(start, min(start + win, len(options))):
+                    label = label_of(options[i])
+                    if i == idx:
+                        print_line(
+                            f"[{GUTTER}]{S_BAR}[/]  [{GREEN}]{S_RADIO_ACTIVE}[/] {label}"
+                        )
+                    else:
+                        print_line(
+                            f"[{GUTTER}]{S_BAR}[/]  [{DIM}]{S_RADIO_INACTIVE}[/] "
+                            f"[{DIM}]{label}[/]"
+                        )
+                rest = len(options) - (start + win)
+                if has_scroll and rest > 0:
+                    print_line(f"[{GUTTER}]{S_BAR}[/]  [{DIM}]↓ 还有 {rest} 项[/]")
+                elif has_scroll:
+                    bar()
 
-        console.print(f"[{GUTTER}]{S_BAR_END}[/]  [{DIM}]{footer}[/]")
+            print_line(f"[{GUTTER}]{S_BAR_END}[/]  [{DIM}]{footer}[/]")
+            _end_repaint()
 
-        key = read_key()
-        if key in ("q", "esc", "ctrl-c"):
-            return ("quit", None, idx)
-        if key in ("up", "k") and options:
-            idx = (idx - 1) % len(options)
-        elif key in ("down", "j") and options:
-            idx = (idx + 1) % len(options)
-        elif key == "enter" and options:
-            return ("select", options[idx], idx)
-        elif key in extra_keys:
-            return (extra_keys[key], options[idx] if options else None, idx)
+            key = read_key()
+            if key in ("q", "esc", "ctrl-c"):
+                return ("quit", None, idx)
+            if key in ("up", "k") and options:
+                idx = (idx - 1) % len(options)
+            elif key in ("down", "j") and options:
+                idx = (idx + 1) % len(options)
+            elif key == "enter" and options:
+                return ("select", options[idx], idx)
+            elif key in extra_keys:
+                return (extra_keys[key], options[idx] if options else None, idx)
+    finally:
+        _show_cursor()
 
 
 def _window_size(n: int) -> int:
-    avail = console.size.height - 9  # header + step + footer chrome
+    # Keep the rendered frame shorter than the terminal. The slide previewer
+    # has a multi-line header, category tabs, and optional scroll indicators;
+    # overflowing the terminal would make the terminal scroll mid-repaint.
+    avail = console.size.height - 14
     return max(4, min(n, avail))
 
 
@@ -222,7 +262,7 @@ def with_spinner(render_header: Callable[[], None], message: str, fn: Callable):
         clear()
         render_header()
         bar()
-        console.print(f"[{CYAN}]{next(frames)}[/]  {message}")
+        print_line(f"[{CYAN}]{next(frames)}[/]  {message}")
         bar()
         time.sleep(0.12)
     worker.join()

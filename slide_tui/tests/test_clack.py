@@ -24,6 +24,10 @@ class SelectNavigationTests(unittest.TestCase):
 
         with (
             mock.patch.object(clack, "clear"),
+            mock.patch.object(clack, "_begin_repaint"),
+            mock.patch.object(clack, "_end_repaint"),
+            mock.patch.object(clack, "_show_cursor"),
+            mock.patch.object(clack, "_clear_current_line"),
             mock.patch.object(clack.console, "print"),
             mock.patch.object(clack, "read_key", side_effect=lambda: next(keys)),
         ):
@@ -43,6 +47,10 @@ class SelectNavigationTests(unittest.TestCase):
 
         with (
             mock.patch.object(clack, "clear"),
+            mock.patch.object(clack, "_begin_repaint"),
+            mock.patch.object(clack, "_end_repaint"),
+            mock.patch.object(clack, "_show_cursor"),
+            mock.patch.object(clack, "_clear_current_line"),
             mock.patch.object(clack.console, "print"),
             mock.patch.object(clack, "read_key", side_effect=lambda: next(keys)),
         ):
@@ -62,6 +70,10 @@ class SelectNavigationTests(unittest.TestCase):
 
         with (
             mock.patch.object(clack, "clear"),
+            mock.patch.object(clack, "_begin_repaint"),
+            mock.patch.object(clack, "_end_repaint"),
+            mock.patch.object(clack, "_show_cursor"),
+            mock.patch.object(clack, "_clear_current_line"),
             mock.patch.object(clack.console, "print"),
             mock.patch.object(clack, "read_key", side_effect=lambda: next(keys)),
         ):
@@ -83,6 +95,10 @@ class SelectNavigationTests(unittest.TestCase):
 
         with (
             mock.patch.object(clack, "clear"),
+            mock.patch.object(clack, "_begin_repaint"),
+            mock.patch.object(clack, "_end_repaint"),
+            mock.patch.object(clack, "_show_cursor"),
+            mock.patch.object(clack, "_clear_current_line"),
             mock.patch.object(clack.console, "print"),
             mock.patch.object(clack, "read_key", side_effect=lambda: next(keys)),
         ):
