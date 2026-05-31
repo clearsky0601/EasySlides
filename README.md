@@ -1,5 +1,5 @@
 <div align="center">
-![tubiao](media/tubiao.png)
+![tubiao](assets/tubiao.png)
 
 # 🎨 EasySlides
 
