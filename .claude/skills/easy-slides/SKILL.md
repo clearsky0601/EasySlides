@@ -1,9 +1,9 @@
 ---
-name: jyy-slides
+name: easy-slides
 description: 在 EasySlides 项目中创建、编辑、管理 jyy 风格的 Reveal.js 幻灯片（jyyslide-md 方言），直接读写 SQLite `db.sqlite3` 的 slideapp_slide 表。Use when the user wants to make / write / edit / 创建 / 修改 / 生成 slides 或幻灯片 in this repo, draft jyy 风格 presentations, manage the slideapp_slide table, publish/unlock a slide, or work with jyyslide-md Markdown syntax (分隔符 / :::columns / :::tip / timeline / KaTeX 等).
 ---
 
-# jyy-slides
+# easy-slides
 
 在本项目（EasySlides，Django + Reveal.js）里创建和管理 jyy 风格幻灯片。内容用 jyyslide-md 方言 Markdown 编写，经 Python-Markdown → HTML → Reveal.js 渲染，存在项目根 `db.sqlite3` 的 `slideapp_slide` 表。画布 1024×768；Tailwind CSS 内嵌；KaTeX 渲染公式；`codehilite` 做代码高亮。
 
@@ -37,7 +37,7 @@ description: 在 EasySlides 项目中创建、编辑、管理 jyy 风格的 Reve
 **不要手写 `sqlite3 "..."` 或内联 Python 拼 SQL** —— content 里的引号、换行、`:::` 极易把 shell 命令撑爆。统一用本 skill 的 `scripts/slide_db.py`，它从文件/stdin 读内容，自动向上查找 `db.sqlite3`，并正确填充 NOT NULL 的 `html_cache`/`content_hash`（留空，首次访问页面时由渲染管线回填）。
 
 ```bash
-SD=.claude/skills/jyy-slides/scripts/slide_db.py
+SD=.claude/skills/easy-slides/scripts/slide_db.py
 
 python3 $SD list                        # 列出全部幻灯片（id / 可见性 / 版本 / 分类 / 标题）
 python3 $SD list --category demo        # 按分类过滤
@@ -67,7 +67,7 @@ python3 $SD delete <id>                 # 删除
 幻灯片在网页首次访问时自动渲染并缓存。若需立即强制重渲（如语法管线刚改过），用 venv 跑（`render` 会 `django.setup()`，须让项目根在 `PYTHONPATH` 上，否则报 `No module named 'easy_slides'`）：
 
 ```bash
-PYTHONPATH=. .venv/bin/python .claude/skills/jyy-slides/scripts/slide_db.py render <id>
+PYTHONPATH=. .venv/bin/python .claude/skills/easy-slides/scripts/slide_db.py render <id>
 ```
 
 它走 `slideapp.html_converter.convert_and_cache`，刷新 `html_cache` 与 `content_hash`。（`list`/`get`/`create`/`update` 等纯 SQLite 操作不需要 `PYTHONPATH`，只有 `render` 需要。）

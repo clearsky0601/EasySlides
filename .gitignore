@@ -11,7 +11,7 @@ staticfiles/
 .claude/*
 !.claude/skills/
 .claude/skills/*
-!.claude/skills/jyy-slides/
+!.claude/skills/easy-slides/
 *.sqlite3
 QWEN.md
 .antigravitycli/

@@ -116,15 +116,15 @@
 
 ---
 
-## 🤖 用 AI 写幻灯片：jyy-slides Claude Code Skill
+## 🤖 用 AI 写幻灯片：easy-slides Claude Code Skill
 
-仓库内置了一个 [Claude Code](https://docs.claude.com/en/docs/claude-code) skill —— [`.claude/skills/jyy-slides`](.claude/skills/jyy-slides)，让 LLM 直接按 jyy 方言写稿并落库。
+仓库内置了一个 [Claude Code](https://docs.claude.com/en/docs/claude-code) skill —— [`.claude/skills/easy-slides`](.claude/skills/easy-slides)，让 LLM 直接按 jyy 方言写稿并落库。
 
 - **🎯 自动遵循语法**：skill 以 [SLIDE_SYNTAX.md](SLIDE_SYNTAX.md) 为唯一权威，内置分隔符禁区与生成前自检清单，避免最常见的解析翻车。
 - **🛡️ 安全读写数据库**：附带 `scripts/slide_db.py`，对 `slideapp_slide` 表做 list / get / create / update / delete / publish，从文件或 stdin 读 content，规避引号转义并正确填充 `html_cache` / `content_hash`。
 
 ```bash
-SD=.claude/skills/jyy-slides/scripts/slide_db.py
+SD=.claude/skills/easy-slides/scripts/slide_db.py
 python3 $SD list                                                  # 列出全部幻灯片
 python3 $SD create --title "标题" --category demo --file slide.md  # 从文件建一张
 python3 $SD update <id> --file slide.md                           # 覆盖内容

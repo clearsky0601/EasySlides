@@ -2,7 +2,7 @@
 
 Deliberately Django-free: the TUI must read slide lists from *any* sqlite file
 and toggle locks without binding Django to a single database. Mirrors the
-connection style of ``.claude/skills/jyy-slides/scripts/slide_db.py``.
+connection style of ``.claude/skills/easy-slides/scripts/slide_db.py``.
 """
 from __future__ import annotations
 
