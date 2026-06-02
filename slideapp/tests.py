@@ -446,3 +446,13 @@ class SearchToolbarViewTests(TestCase):
         self.assertContains(resp, 'id="slide-search"')
         self.assertContains(resp, 'data-search=')
         self.assertContains(resp, "正文关键词")
+
+    def test_index_page_has_search(self):
+        from django.contrib.auth.models import User
+        user = User.objects.create_user("tester", password="pw")
+        self.client.force_login(user)
+        Slide.objects.create(title="管理可见", content="管理正文", lock=True)
+        resp = self.client.get("/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'id="slide-search"')
+        self.assertContains(resp, 'data-search=')
