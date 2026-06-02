@@ -184,7 +184,7 @@ class SlidePreviewer:
             title="选择幻灯片",
             options=visible_rows,
             label_of=self._slide_label,
-            hint="h/l 分类 · j/k/↑↓ 移动 · ↵ 预览 · d 切库 · r 刷新 · q 退出",
+            hint="/ 搜索 · h/l 分类 · j/k/↑↓ 移动 · ↵ 预览 · d 切库 · r 刷新 · q 退出",
             footer="↵ 在浏览器打开 /public 预览",
             extra_keys={
                 "d": "switch",
@@ -194,6 +194,7 @@ class SlidePreviewer:
             },
             start_index=self._slide_index,
             render_before_options=self._render_category_tabs,
+            filter_of=lambda row: (row.title + " " + row.content).lower(),
         )
         self._slide_indices[self._current_category()] = self._slide_index
         if action == "quit":
