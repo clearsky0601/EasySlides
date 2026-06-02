@@ -430,3 +430,19 @@ class DirectiveIsolationTests(SimpleTestCase):
         html = md_to_html(md)
         self.assertIn("admonition-tip", html)
         self.assertIn("md-columns", html)
+
+
+from django.test import TestCase
+from .models import Slide
+
+
+class SearchToolbarViewTests(TestCase):
+    databases = {"default", "slides"}
+
+    def test_public_page_has_search_and_data_search(self):
+        Slide.objects.create(title="可见幻灯片", content="正文关键词", lock=False)
+        resp = self.client.get("/public/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'id="slide-search"')
+        self.assertContains(resp, 'data-search=')
+        self.assertContains(resp, "正文关键词")
