@@ -16,6 +16,7 @@ import tty
 from typing import Callable, Sequence
 
 from rich.console import Console
+from rich.markup import escape
 
 console = Console(highlight=False)
 
@@ -164,44 +165,62 @@ def select(
     extra_keys: dict[str, str] | None = None,
     start_index: int = 0,
     render_before_options: Callable[[], None] | None = None,
+    filter_of: Callable[[object], str] | None = None,
 ) -> tuple[str, object, int]:
     """Render a clack select prompt and return ``(action, value, index)``.
 
     ``action`` is ``"select"`` for Enter, ``"quit"`` for q/esc/ctrl-c, or any
     value mapped in ``extra_keys`` (e.g. ``{"d": "switch"}``).
+
+    When ``filter_of`` is given, pressing ``/`` enters a filter mode: typed
+    characters narrow the options to those whose ``filter_of(option)`` contains
+    the query (case-insensitive). In filter mode Enter returns the *original*
+    index into ``options``; Esc clears the query and leaves filter mode.
     """
     extra_keys = extra_keys or {}
-    if not options:
-        idx = 0
-    else:
-        idx = max(0, min(start_index, len(options) - 1))
+    base = list(options)
+    filtering = False
+    query = ""
+
+    def shown_options() -> list:
+        if not filtering or not query:
+            return base
+        q = query.lower()
+        return [o for o in base if q in filter_of(o).lower()]
+
+    idx = max(0, min(start_index, len(base) - 1)) if base else 0
 
     clear()
     try:
         while True:
+            shown = shown_options()
+            idx = max(0, min(idx, len(shown) - 1)) if shown else 0
+
             _begin_repaint()
             render_header()
             bar()
             head = f"[{CYAN}]{S_STEP_ACTIVE}[/]  [bold]{title}[/]"
-            if hint:
-                head += f"   [{DIM}]{hint}[/]"
+            active_hint = "↵ 选中 · ⌫ 删字 · esc 取消搜索" if filtering else hint
+            if active_hint:
+                head += f"   [{DIM}]{active_hint}[/]"
             print_line(head)
             bar()
             if render_before_options is not None:
                 render_before_options()
 
-            if not options:
-                print_line(f"[{GUTTER}]{S_BAR}[/]  [{DIM}]（空）[/]")
+            if not shown:
+                msg = "无匹配" if filtering else "（空）"
+                print_line(f"[{GUTTER}]{S_BAR}[/]  [{DIM}]{msg}[/]")
             else:
-                win = _window_size(len(options))
-                start = _window_start(idx, len(options), win)
-                has_scroll = len(options) > win
+                win = _window_size(len(shown))
+                start = _window_start(idx, len(shown), win)
+                has_scroll = len(shown) > win
                 if has_scroll and start > 0:
                     print_line(f"[{GUTTER}]{S_BAR}[/]  [{DIM}]↑ 还有 {start} 项[/]")
                 elif has_scroll:
                     bar()
-                for i in range(start, min(start + win, len(options))):
-                    label = label_of(options[i])
+                for i in range(start, min(start + win, len(shown))):
+                    label = label_of(shown[i])
                     if i == idx:
                         print_line(
                             f"[{GUTTER}]{S_BAR}[/]  [{GREEN}]{S_RADIO_ACTIVE}[/] {label}"
@@ -211,26 +230,60 @@ def select(
                             f"[{GUTTER}]{S_BAR}[/]  [{DIM}]{S_RADIO_INACTIVE}[/] "
                             f"[{DIM}]{label}[/]"
                         )
-                rest = len(options) - (start + win)
+                rest = len(shown) - (start + win)
                 if has_scroll and rest > 0:
                     print_line(f"[{GUTTER}]{S_BAR}[/]  [{DIM}]↓ 还有 {rest} 项[/]")
                 elif has_scroll:
                     bar()
 
+            if filtering:
+                print_line(
+                    f"[{GUTTER}]{S_BAR}[/]  [{CYAN}]搜索:[/] {escape(query)}[reverse] [/]"
+                )
             print_line(f"[{GUTTER}]{S_BAR_END}[/]  [{DIM}]{footer}[/]")
             _end_repaint()
 
             key = read_key()
+
+            if filtering:
+                if key == "ctrl-c":
+                    return ("quit", None, 0)
+                if key == "esc":
+                    filtering = False
+                    query = ""
+                    idx = 0
+                elif key == "enter":
+                    if shown:
+                        sel = shown[idx]
+                        return ("select", sel, base.index(sel))
+                elif key == "backspace":
+                    query = query[:-1]
+                    idx = 0
+                elif key == "up":
+                    if shown:
+                        idx = (idx - 1) % len(shown)
+                elif key == "down":
+                    if shown:
+                        idx = (idx + 1) % len(shown)
+                elif len(key) == 1 and key.isprintable():
+                    query += key
+                    idx = 0
+                continue
+
             if key in ("q", "esc", "ctrl-c"):
                 return ("quit", None, idx)
-            if key in ("up", "k") and options:
-                idx = (idx - 1) % len(options)
-            elif key in ("down", "j") and options:
-                idx = (idx + 1) % len(options)
-            elif key == "enter" and options:
-                return ("select", options[idx], idx)
+            if key == "/" and filter_of is not None:
+                filtering = True
+                query = ""
+                idx = 0
+            elif key in ("up", "k") and shown:
+                idx = (idx - 1) % len(shown)
+            elif key in ("down", "j") and shown:
+                idx = (idx + 1) % len(shown)
+            elif key == "enter" and shown:
+                return ("select", shown[idx], idx)
             elif key in extra_keys:
-                return (extra_keys[key], options[idx] if options else None, idx)
+                return (extra_keys[key], shown[idx] if shown else None, idx)
     finally:
         _show_cursor()
 

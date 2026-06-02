@@ -113,5 +113,69 @@ class SelectNavigationTests(unittest.TestCase):
         hook.assert_called_once()
 
 
+class SelectFilterTests(unittest.TestCase):
+    def _run(self, keys, options, **kw):
+        it = iter(keys)
+        with (
+            mock.patch.object(clack, "clear"),
+            mock.patch.object(clack, "_begin_repaint"),
+            mock.patch.object(clack, "_end_repaint"),
+            mock.patch.object(clack, "_show_cursor"),
+            mock.patch.object(clack, "_clear_current_line"),
+            mock.patch.object(clack.console, "print"),
+            mock.patch.object(clack, "read_key", side_effect=lambda: next(it)),
+        ):
+            return clack.select(
+                lambda: None,
+                title="Pick",
+                options=options,
+                label_of=str,
+                filter_of=lambda o: o,
+                **kw,
+            )
+
+    def test_slash_filters_then_enter_returns_original_index(self):
+        action, value, idx = self._run(
+            ["/", "b", "a", "n", "enter"],
+            ["apple", "cherry", "banana"],
+        )
+        self.assertEqual(action, "select")
+        self.assertEqual(value, "banana")
+        self.assertEqual(idx, 2)
+
+    def test_backspace_widens_filter(self):
+        action, value, idx = self._run(
+            ["/", "z", "backspace", "enter"],
+            ["apple", "banana"],
+        )
+        self.assertEqual(action, "select")
+        self.assertEqual(value, "apple")
+
+    def test_esc_exits_filter_without_quitting(self):
+        action, value, idx = self._run(
+            ["/", "b", "esc", "enter"],
+            ["apple", "banana"],
+        )
+        self.assertEqual(action, "select")
+        self.assertEqual(value, "apple")
+
+    def test_slash_inert_without_filter_of(self):
+        it = iter(["/", "enter"])
+        with (
+            mock.patch.object(clack, "clear"),
+            mock.patch.object(clack, "_begin_repaint"),
+            mock.patch.object(clack, "_end_repaint"),
+            mock.patch.object(clack, "_show_cursor"),
+            mock.patch.object(clack, "_clear_current_line"),
+            mock.patch.object(clack.console, "print"),
+            mock.patch.object(clack, "read_key", side_effect=lambda: next(it)),
+        ):
+            action, value, idx = clack.select(
+                lambda: None, title="Pick",
+                options=["apple", "banana"], label_of=str,
+            )
+        self.assertEqual((action, value), ("select", "apple"))
+
+
 if __name__ == "__main__":
     unittest.main()
