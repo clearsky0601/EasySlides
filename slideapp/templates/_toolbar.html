@@ -127,7 +127,8 @@
 </nav>
 
 <script>
-(function () {
+// 该片段 include 在卡片之前，必须等 DOM 解析完成才能拿到 .slide-card / .lane。
+document.addEventListener('DOMContentLoaded', function () {
     const input = document.getElementById('slide-search');
     const clearBtn = document.getElementById('slide-search-clear');
     const countEl = document.getElementById('slide-search-count');
@@ -151,8 +152,10 @@
             if (hit) matched++;
         });
         lanes.forEach(l => {
-            const visible = l.querySelectorAll('.slide-card[data-search]:not([style*="display: none"])').length;
-            l.style.display = visible > 0 ? '' : 'none';
+            const laneCards = l.querySelectorAll('.slide-card[data-search]');
+            let anyVisible = false;
+            laneCards.forEach(c => { if (c.style.display !== 'none') anyVisible = true; });
+            l.style.display = anyVisible ? '' : 'none';
         });
         countEl.textContent = '匹配 ' + matched + ' 张';
     }
@@ -167,5 +170,5 @@
         apply('');
         input.focus();
     });
-})();
+});
 </script>
