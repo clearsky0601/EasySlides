@@ -156,5 +156,69 @@ class DisplayNameTests(unittest.TestCase):
                          "elsewhere.sqlite3")
 
 
+class SlideContentTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.db = Path(self.tmp.name) / "db.sqlite3"
+        conn = sqlite3.connect(self.db)
+        conn.execute(
+            "CREATE TABLE slideapp_slide ("
+            "id INTEGER PRIMARY KEY, title TEXT, category TEXT, "
+            "lock INTEGER, version INTEGER, sort_order INTEGER, content TEXT)"
+        )
+        conn.execute(
+            "INSERT INTO slideapp_slide "
+            "(id, title, category, lock, version, sort_order, content) "
+            "VALUES (1, 'Alpha', '', 0, 0, 1, '# heading\nbody text')"
+        )
+        conn.commit()
+        conn.close()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_content_is_loaded(self):
+        rows = db.list_slides(self.db)
+        self.assertEqual(rows[0].content, "# heading\nbody text")
+
+    def test_blob_content_is_decoded_to_str(self):
+        # 现实数据：个别幻灯片的 content 列被存成了 BLOB（bytes），
+        # SlideRow.content 必须始终是 str，否则 TUI 拼接标题+正文时崩溃。
+        blob_db = Path(self.tmp.name) / "blob.sqlite3"
+        conn = sqlite3.connect(blob_db)
+        conn.execute(
+            "CREATE TABLE slideapp_slide ("
+            "id INTEGER PRIMARY KEY, title TEXT, category TEXT, "
+            "lock INTEGER, version INTEGER, sort_order INTEGER, content TEXT)"
+        )
+        conn.execute(
+            "INSERT INTO slideapp_slide "
+            "(id, title, category, lock, version, sort_order, content) "
+            "VALUES (1, 'Blob', '', 0, 0, 1, ?)",
+            ("# 标题\n正文内容".encode("utf-8"),),
+        )
+        conn.commit()
+        conn.close()
+        rows = db.list_slides(blob_db)
+        self.assertIsInstance(rows[0].content, str)
+        self.assertEqual(rows[0].content, "# 标题\n正文内容")
+
+    def test_content_defaults_empty_on_legacy_without_column(self):
+        legacy = Path(self.tmp.name) / "legacy.sqlite3"
+        conn = sqlite3.connect(legacy)
+        conn.execute(
+            "CREATE TABLE slideapp_slide "
+            "(id INTEGER PRIMARY KEY, title TEXT, lock INTEGER, version INTEGER)"
+        )
+        conn.execute(
+            "INSERT INTO slideapp_slide (id, title, lock, version) "
+            "VALUES (1, 'NoContent', 0, 0)"
+        )
+        conn.commit()
+        conn.close()
+        rows = db.list_slides(legacy)
+        self.assertEqual(rows[0].content, "")
+
+
 if __name__ == "__main__":
     unittest.main()

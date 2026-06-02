@@ -22,6 +22,7 @@ class SlideRow:
     lock: int           # 1 = locked/private, 0 = public
     version: int
     sort_order: int
+    content: str = ""
 
     @property
     def is_locked(self) -> bool:
@@ -66,7 +67,15 @@ def discover_dbs(repo_root: Path | None = None) -> list[Path]:
     return sorted(found, key=sort_key)
 
 
-_WANTED_COLUMNS = ("id", "title", "category", "lock", "version", "sort_order")
+_WANTED_COLUMNS = ("id", "title", "category", "lock", "version", "sort_order", "content")
+
+
+def _as_text(value) -> str:
+    """Coerce a sqlite cell to ``str``. Some rows store ``content`` as a BLOB
+    (raw UTF-8 bytes); decoding keeps ``SlideRow.content`` always a ``str``."""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", "replace")
+    return value or ""
 
 
 def _connect(db: Path) -> sqlite3.Connection:
@@ -144,6 +153,7 @@ def list_slides(db: Path) -> list[SlideRow]:
                 lock=d.get("lock", 0) or 0,
                 version=d.get("version", 0) or 0,
                 sort_order=d.get("sort_order", 0) or 0,
+                content=_as_text(d.get("content")),
             )
         )
     return result

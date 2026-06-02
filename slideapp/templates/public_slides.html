@@ -59,33 +59,6 @@
 
         .stats { color: var(--muted); font-size: 13px; }
 
-        .sortbar {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin: 0 0 14px;
-        }
-
-        .sort-label { color: var(--muted); font-size: 12px; margin-right: 2px; }
-
-        .sort-btn {
-            width: 34px;
-            min-height: 34px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--line-strong);
-            background: var(--panel);
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        .sort-btn:hover,
-        .sort-btn.active {
-            background: var(--accent-soft);
-            border-color: var(--accent);
-        }
-
         .board { display: grid; gap: 12px; }
 
         .lane {
@@ -211,24 +184,7 @@
         </div>
     </header>
 
-    <nav class="sortbar" aria-label="排序">
-        <span class="sort-label">排序</span>
-        <a class="sort-btn {% if sort == 'manual' %}active{% endif %}" href="?sort=manual" title="手动排序">
-            <svg viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
-        </a>
-        <a class="sort-btn {% if sort == 'updated_desc' %}active{% endif %}" href="?sort=updated_desc" title="修改时间：从晚到早">
-            <svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/><path d="M7 21h8"/><path d="M11 17l4 4 4-4"/></svg>
-        </a>
-        <a class="sort-btn {% if sort == 'updated_asc' %}active{% endif %}" href="?sort=updated_asc" title="修改时间：从早到晚">
-            <svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/><path d="M7 17h8"/><path d="M11 21l4-4 4 4"/></svg>
-        </a>
-        <a class="sort-btn {% if sort == 'created_desc' %}active{% endif %}" href="?sort=created_desc" title="创建时间：从晚到早">
-            <svg viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2"/><path d="M8 17h8"/><path d="M12 13l4 4 4-4"/></svg>
-        </a>
-        <a class="sort-btn {% if sort == 'created_asc' %}active{% endif %}" href="?sort=created_asc" title="创建时间：从早到晚">
-            <svg viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2"/><path d="M8 13h8"/><path d="M12 17l4-4 4 4"/></svg>
-        </a>
-    </nav>
+    {% include "_toolbar.html" %}
 
     <section class="board" aria-label="public slides">
         <section class="lane">
@@ -240,7 +196,7 @@
             </header>
             <div class="lane-body">
                 {% for slide in uncategorized_slides %}
-                    <a class="slide-card" href="{% url 'public_edit_slide' slide.id %}">
+                    <a class="slide-card" data-search="{{ slide.title }} {{ slide.content }}" href="{% url 'public_edit_slide' slide.id %}">
                         <div class="slide-title">{{ slide.title }}</div>
                         <div class="slide-meta">创建 {{ slide.created_at|date:"Y-m-d H:i" }}<br>修改 {{ slide.updated_at|date:"Y-m-d H:i" }}</div>
                     </a>
@@ -260,7 +216,7 @@
                 </header>
                 <div class="lane-body">
                     {% for slide in category.slides %}
-                        <a class="slide-card" href="{% url 'public_edit_slide' slide.id %}">
+                        <a class="slide-card" data-search="{{ slide.title }} {{ slide.content }}" href="{% url 'public_edit_slide' slide.id %}">
                             <div class="slide-title">{{ slide.title }}</div>
                             <div class="slide-meta">创建 {{ slide.created_at|date:"Y-m-d H:i" }}<br>修改 {{ slide.updated_at|date:"Y-m-d H:i" }}</div>
                         </a>
