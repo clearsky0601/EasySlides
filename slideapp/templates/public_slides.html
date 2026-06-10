@@ -184,7 +184,7 @@
             </header>
             <div class="lane-body">
                 {% for slide in uncategorized_slides %}
-                    <a class="slide-card" data-search="{{ slide.title }} {{ slide.content }}" href="{% url 'public_edit_slide' slide.id %}">
+                    <a class="slide-card" data-slide-id="{{ slide.id }}" data-search="{{ slide.title }}" href="{% url 'public_edit_slide' slide.id %}">
                         <div class="slide-title">{{ slide.title }}</div>
                         <div class="slide-meta">创建 {{ slide.created_at|date:"Y-m-d H:i" }}<br>修改 {{ slide.updated_at|date:"Y-m-d H:i" }}</div>
                     </a>
@@ -204,7 +204,7 @@
                 </header>
                 <div class="lane-body">
                     {% for slide in category.slides %}
-                        <a class="slide-card" data-search="{{ slide.title }} {{ slide.content }}" href="{% url 'public_edit_slide' slide.id %}">
+                        <a class="slide-card" data-slide-id="{{ slide.id }}" data-search="{{ slide.title }}" href="{% url 'public_edit_slide' slide.id %}">
                             <div class="slide-title">{{ slide.title }}</div>
                             <div class="slide-meta">创建 {{ slide.created_at|date:"Y-m-d H:i" }}<br>修改 {{ slide.updated_at|date:"Y-m-d H:i" }}</div>
                         </a>

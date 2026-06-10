@@ -473,7 +473,7 @@
             </header>
             <div class="lane-body" data-dropzone>
                 {% for slide in uncategorized_slides %}
-                    <article class="slide-card" draggable="{% if sort == 'manual' %}true{% else %}false{% endif %}" data-slide-id="{{ slide.id }}" data-search="{{ slide.title }} {{ slide.content }}">
+                    <article class="slide-card" draggable="{% if sort == 'manual' %}true{% else %}false{% endif %}" data-slide-id="{{ slide.id }}" data-search="{{ slide.title }}">
                         <a class="slide-link" href="{% url 'edit_slide' slide.id %}"><div class="slide-title">{{ slide.title }}</div></a>
                         <div class="slide-meta">
                             <div>创建 {{ slide.created_at|date:"Y-m-d H:i" }}<br>修改 {{ slide.updated_at|date:"Y-m-d H:i" }}</div>
@@ -525,7 +525,7 @@
                 </header>
                 <div class="lane-body" data-dropzone>
                     {% for slide in category.slides %}
-                        <article class="slide-card" draggable="{% if sort == 'manual' %}true{% else %}false{% endif %}" data-slide-id="{{ slide.id }}" data-search="{{ slide.title }} {{ slide.content }}">
+                        <article class="slide-card" draggable="{% if sort == 'manual' %}true{% else %}false{% endif %}" data-slide-id="{{ slide.id }}" data-search="{{ slide.title }}">
                             <a class="slide-link" href="{% url 'edit_slide' slide.id %}"><div class="slide-title">{{ slide.title }}</div></a>
                             <div class="slide-meta">
                                 <div>创建 {{ slide.created_at|date:"Y-m-d H:i" }}<br>修改 {{ slide.updated_at|date:"Y-m-d H:i" }}</div>

@@ -445,7 +445,8 @@ class SearchToolbarViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'id="slide-search"')
         self.assertContains(resp, 'data-search=')
-        self.assertContains(resp, "正文关键词")
+        # 正文不再内联进列表页（走 /api/search-index/），页面体积不随全库正文增长
+        self.assertNotContains(resp, "正文关键词")
 
     def test_index_page_has_search(self):
         from django.contrib.auth.models import User
@@ -456,6 +457,34 @@ class SearchToolbarViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'id="slide-search"')
         self.assertContains(resp, 'data-search=')
+
+
+class SearchIndexTests(TestCase):
+    databases = {"default", "slides"}
+
+    def setUp(self):
+        from django.utils import timezone
+        self.public = Slide.objects.create(title="公开", content="公开正文", lock=False)
+        self.locked = Slide.objects.create(title="私有", content="私有正文", lock=True)
+        self.trashed = Slide.objects.create(
+            title="已删", content="已删正文", lock=False, deleted_at=timezone.now())
+
+    def _ids(self, resp):
+        return {s["id"] for s in resp.json()["slides"]}
+
+    def test_anonymous_only_sees_public_active(self):
+        ids = self._ids(self.client.get("/api/search-index/"))
+        self.assertEqual(ids, {self.public.id})
+
+    def test_authenticated_sees_locked_but_not_trashed(self):
+        from django.contrib.auth.models import User
+        self.client.force_login(User.objects.create_user("searcher", password="pw"))
+        ids = self._ids(self.client.get("/api/search-index/"))
+        self.assertEqual(ids, {self.public.id, self.locked.id})
+
+    def test_index_contains_full_text(self):
+        data = self.client.get("/api/search-index/").json()["slides"]
+        self.assertEqual(data[0]["text"], "公开正文")
 
 
 class SoftDeleteTests(TestCase):
