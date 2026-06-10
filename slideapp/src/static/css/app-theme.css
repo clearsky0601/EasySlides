@@ -1,0 +1,29 @@
+/* EasySlides 管理/列表/登录页共享主题变量。
+ * 亮/暗两套色一行写完（light-dark()），暗色跟随系统（color-scheme），
+ * 也可由 <html data-theme="light|dark"> 手动覆盖（_toolbar.html 的三态开关写入）。
+ * 幻灯片渲染页（basetemp/jyy 主题）刻意不引入本文件：演示配色是作者设计的一部分。
+ */
+
+:root { color-scheme: light dark; }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+:root {
+    --bg: light-dark(#f6f2ea, #191a17);
+    --panel: light-dark(#fffdf8, #22231f);
+    --ink: light-dark(#1f211d, #e6e2d8);
+    --muted: light-dark(#777267, #9a948a);
+    --line: light-dark(#ddd4c4, #3a3b35);
+    --line-strong: light-dark(#c7baa6, #4c4d45);
+    --accent: light-dark(#285c4d, #5fa08c);
+    --accent-strong: light-dark(#143f35, #82c0ab);
+    --accent-soft: light-dark(rgba(40, 92, 77, 0.08), rgba(95, 160, 140, 0.14));
+    --danger: light-dark(#9b3b2f, #d07a6c);
+    --shadow: light-dark(0 12px 28px rgba(54, 46, 34, 0.08), 0 12px 28px rgba(0, 0, 0, 0.4));
+    --card-shadow: light-dark(0 4px 16px rgba(54, 46, 34, 0.06), 0 4px 16px rgba(0, 0, 0, 0.32));
+    /* body 网格背景线 */
+    --grid-line-v: light-dark(rgba(40, 92, 77, 0.06), rgba(95, 160, 140, 0.05));
+    --grid-line-h: light-dark(rgba(40, 92, 77, 0.045), rgba(95, 160, 140, 0.04));
+    /* 输入框聚焦底色（亮色下原来是纯白） */
+    --focus-bg: light-dark(#ffffff, #2a2b26);
+}
