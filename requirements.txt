@@ -1,3 +1,10 @@
+# 直接依赖（人类可读）；全量锁定见 requirements.lock（pip-compile 生成）
+# 重新生成：.venv/bin/python -m piptools compile requirements.txt -o requirements.lock
+django>=6.0,<7
+channels
+daphne
+twisted[http2,tls]
+whitenoise
 jinja2
 lxml
 markdown
@@ -6,13 +13,7 @@ pygments
 pyquery
 pyyaml
 requests
+rich
 types-markdown
 types-pyyaml
 types-requests
-whitenoise
-django
-channels
-daphne
-twisted[http2,tls]
-psycopg2-binary
-rich

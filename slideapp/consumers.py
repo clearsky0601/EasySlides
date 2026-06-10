@@ -1,6 +1,7 @@
 # slideapp/consumers.py
 
 import json
+import logging
 import traceback
 
 from asgiref.sync import sync_to_async
@@ -10,6 +11,9 @@ from django.contrib.auth.models import AnonymousUser
 
 from .models import Slide
 from .html_converter import convert_markdown, convert_and_cache
+
+logger = logging.getLogger(__name__)
+
 
 class SlideConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -24,7 +28,11 @@ class SlideConsumer(AsyncWebsocketConsumer):
         pass
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
+        try:
+            data = json.loads(text_data)
+        except (json.JSONDecodeError, TypeError):
+            logger.warning("收到无法解析的 WebSocket 消息，已忽略")
+            return
         action = data.get('action')
 
         if action == 'load':
@@ -107,14 +115,18 @@ class SlideConsumer(AsyncWebsocketConsumer):
             return await sync_to_async(convert_markdown)(markdown_content)
         except Exception as e:
             error_message = ''.join(traceback.format_exception_only(type(e), e))
-            print(f"转换失败: {error_message}")
+            logger.warning("转换失败: %s", error_message)
             return {'error': error_message}
 
 
 class PublicSlideConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.slide_id = self.scope['url_route']['kwargs'].get('slide_id')
-        slide = await sync_to_async(Slide.objects.get)(id=self.slide_id)
+        try:
+            slide = await sync_to_async(Slide.objects.get)(id=self.slide_id)
+        except Slide.DoesNotExist:
+            await self.close()
+            return
         if slide.lock:
             await self.close()
         else:
@@ -124,7 +136,11 @@ class PublicSlideConsumer(AsyncWebsocketConsumer):
         pass
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
+        try:
+            data = json.loads(text_data)
+        except (json.JSONDecodeError, TypeError):
+            logger.warning("收到无法解析的 WebSocket 消息，已忽略")
+            return
         action = data.get('action')
 
         if action == 'load':
@@ -143,7 +159,7 @@ class PublicSlideConsumer(AsyncWebsocketConsumer):
                 }))
             except Exception as e:
                 error_message = ''.join(traceback.format_exception_only(type(e), e))
-                print(f"转换失败: {error_message}")
+                logger.warning("转换失败: %s", error_message)
                 await self.send(text_data=json.dumps({
                     'action': 'error',
                     'message': error_message

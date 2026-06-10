@@ -456,3 +456,39 @@ class SearchToolbarViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'id="slide-search"')
         self.assertContains(resp, 'data-search=')
+
+
+class UploadImageTests(TestCase):
+    databases = {"default", "slides"}
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        user = User.objects.create_user("uploader", password="pw")
+        self.client.force_login(user)
+
+    def _upload(self, name, content, content_type):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        f = SimpleUploadedFile(name, content, content_type=content_type)
+        return self.client.post("/upload_image/", {"image": f})
+
+    def test_rejects_non_whitelisted_type(self):
+        resp = self._upload("evil.svg", b"<svg/>", "image/svg+xml")
+        self.assertEqual(resp.status_code, 400)
+        resp = self._upload("fake.png", b"text", "text/plain")
+        self.assertEqual(resp.status_code, 400)
+
+    def test_rejects_oversize(self):
+        from slideapp.views import MAX_IMAGE_SIZE
+        resp = self._upload("big.png", b"0" * (MAX_IMAGE_SIZE + 1), "image/png")
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("10MB", resp.json()["error"])
+
+    def test_accepts_png_and_ignores_original_extension(self):
+        import os as _os
+        from django.conf import settings as _settings
+        resp = self._upload("photo.txt", b"\x89PNG fake", "image/png")
+        self.assertEqual(resp.status_code, 200)
+        url = resp.json()["url"]
+        self.assertTrue(url.endswith(".png"))
+        # 清理测试产生的文件
+        _os.remove(_os.path.join(_settings.MEDIA_ROOT, "uploads", _os.path.basename(url)))

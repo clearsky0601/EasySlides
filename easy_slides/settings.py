@@ -20,12 +20,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-bxd)3tz&y6oo_jq5r^92qyqbg^hx=#m(#i+n#@&cih86qmh8k1"
+# 本地默认值仅用于个人/开发环境，公网部署必须设置 DJANGO_SECRET_KEY。
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-bxd)3tz&y6oo_jq5r^92qyqbg^hx=#m(#i+n#@&cih86qmh8k1",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = ['*']
+DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
+ALLOWED_HOSTS = [
+    h.strip()
+    for h in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if h.strip()
+]
 CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', 'https://localhost').split(',')
+
+# DEBUG 下自动以首个 superuser 登录；公网部署设 EASYSLIDES_AUTO_LOGIN=0 关闭。
+AUTO_LOGIN = os.environ.get('EASYSLIDES_AUTO_LOGIN', '1' if DEBUG else '0') == '1'
 
 # Application definition
 
@@ -136,8 +147,16 @@ STATICFILES_DIRS = [
 # 指定静态文件的根目录，用于 collectstatic
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# 启用 WhiteNoise 的压缩和缓存功能（可选）
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# 启用 WhiteNoise 的压缩和缓存功能
+# （旧的 STATICFILES_STORAGE 设置在 Django 5.1 起已移除，必须用 STORAGES）
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -148,3 +167,31 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'index'  # 登录后重定向的 URL
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {
+            "format": "[{asctime}] {levelname} {name}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "loggers": {
+        "slideapp": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+}
