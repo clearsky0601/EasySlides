@@ -89,7 +89,8 @@ class SlideConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def get_slide_content(self):
-        slide = Slide.objects.get(id=self.slide_id)
+        # 回收站中的幻灯片不可编辑
+        slide = Slide.objects.filter(deleted_at__isnull=True).get(id=self.slide_id)
         return {'content': slide.content, 'version': slide.version}
 
     @database_sync_to_async
@@ -98,7 +99,7 @@ class SlideConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def save_slide_content(self, content, client_version):
-        slide = Slide.objects.get(id=self.slide_id)
+        slide = Slide.objects.filter(deleted_at__isnull=True).get(id=self.slide_id)
         if slide.version != client_version:
             return {'conflict': True, 'content': slide.content, 'version': slide.version}
         slide.content = content

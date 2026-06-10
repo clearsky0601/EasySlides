@@ -36,6 +36,9 @@ class Slide(models.Model):
     version = models.IntegerField(default=0)
     html_cache = models.TextField(blank=True, default='')
     content_hash = models.CharField(max_length=64, blank=True, default='')
+    # 软删除：非空表示已进回收站；查询侧统一走 views.active_slides() 显式过滤，
+    # 不用自定义 Manager 隐式过滤（TUI / agent 脚本直接读 sqlite，行为要一致可见）
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     class Meta:
         ordering = ('sort_order', '-updated_at', '-id')

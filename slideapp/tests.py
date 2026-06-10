@@ -458,6 +458,54 @@ class SearchToolbarViewTests(TestCase):
         self.assertContains(resp, 'data-search=')
 
 
+class SoftDeleteTests(TestCase):
+    databases = {"default", "slides"}
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        user = User.objects.create_user("deleter", password="pw")
+        self.client.force_login(user)
+        self.slide = Slide.objects.create(title="软删测试", content="# 软删测试", lock=False)
+
+    def test_delete_moves_to_trash_and_hides_everywhere(self):
+        resp = self.client.post(f"/delete/{self.slide.id}/")
+        self.assertEqual(resp.status_code, 200)
+        self.slide.refresh_from_db()
+        self.assertIsNotNone(self.slide.deleted_at)
+        # index 与 public 列表都不可见
+        self.assertNotContains(self.client.get("/"), "软删测试")
+        self.assertNotContains(self.client.get("/public/"), "软删测试")
+        # 公开浏览页 404
+        self.assertEqual(
+            self.client.get(f"/public/edit/{self.slide.id}/").status_code, 404)
+        # 编辑页 404
+        self.assertEqual(
+            self.client.get(f"/edit/{self.slide.id}/").status_code, 404)
+        # 回收站可见
+        self.assertContains(self.client.get("/trash/"), "软删测试")
+
+    def test_restore_brings_slide_back(self):
+        self.client.post(f"/delete/{self.slide.id}/")
+        resp = self.client.post(f"/trash/{self.slide.id}/restore/")
+        self.assertEqual(resp.status_code, 200)
+        self.slide.refresh_from_db()
+        self.assertIsNone(self.slide.deleted_at)
+        self.assertContains(self.client.get("/"), "软删测试")
+
+    def test_purge_deletes_permanently(self):
+        self.client.post(f"/delete/{self.slide.id}/")
+        resp = self.client.post(f"/trash/{self.slide.id}/purge/")
+        self.assertEqual(resp.status_code, 200)
+        self.assertFalse(Slide.objects.filter(id=self.slide.id).exists())
+
+    def test_restore_requires_deleted_state(self):
+        # 未删除的幻灯片不能走恢复/彻底删除接口
+        self.assertEqual(
+            self.client.post(f"/trash/{self.slide.id}/restore/").status_code, 404)
+        self.assertEqual(
+            self.client.post(f"/trash/{self.slide.id}/purge/").status_code, 404)
+
+
 class UploadImageTests(TestCase):
     databases = {"default", "slides"}
 

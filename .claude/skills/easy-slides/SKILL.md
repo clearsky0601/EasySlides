@@ -55,7 +55,8 @@ python3 $SD update <id> --title "新标题" --category ClaudeCode
 cat /tmp/slide.md | python3 $SD update <id> --file -   # stdin
 
 python3 $SD publish <id>                # 解锁公开（lock=0）
-python3 $SD delete <id>                 # 删除
+python3 $SD delete <id>                 # 软删除进回收站（web 端可恢复）
+python3 $SD delete <id> --purge         # 彻底删除（不可恢复）
 ```
 
 写入大段内容的标准姿势：用 heredoc 或 Write 工具先落到 `/tmp/slide.md`，再 `create`/`update --file`。
