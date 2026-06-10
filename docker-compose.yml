@@ -18,3 +18,8 @@ services:
     restart: always
     environment:
       - CSRF_TRUSTED_ORIGINS=https://localhost,https://yourdomain.com  # 定义CSRF信任域
+      # 公网部署建议显式设置以下变量（含义见 .env.example）：
+      # - DJANGO_SECRET_KEY=change-me
+      # - DJANGO_DEBUG=0
+      # - DJANGO_ALLOWED_HOSTS=yourdomain.com
+      # - EASYSLIDES_AUTO_LOGIN=0
