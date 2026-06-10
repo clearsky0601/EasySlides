@@ -12,6 +12,7 @@ from django.db.models import Max, Prefetch
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -23,7 +24,13 @@ DEFAULT_DB_NAME = 'db.sqlite3'
 REQUIRED_MANAGEMENT_COLUMNS = {
     'id', 'title', 'content', 'created_at', 'updated_at', 'lock', 'version',
     'category', 'category_ref_id', 'sort_order', 'html_cache', 'content_hash',
+    'deleted_at',
 }
+
+
+def active_slides():
+    """未进回收站的幻灯片；所有列表/详情查询统一从这里出发。"""
+    return Slide.objects.filter(deleted_at__isnull=True)
 
 
 def display_db_name(path):
@@ -63,6 +70,8 @@ def db_compatibility(path):
             for row in conn.execute('PRAGMA table_info(slideapp_slide)').fetchall()
         }
         if not REQUIRED_MANAGEMENT_COLUMNS.issubset(slide_cols):
+            if slide_cols and REQUIRED_MANAGEMENT_COLUMNS - slide_cols == {'deleted_at'}:
+                return False, '需迁移（SLIDES_DB=<路径> manage.py migrate --database=slides slideapp）'
             return False, '旧版结构'
         category_table = conn.execute(
             "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
@@ -178,7 +187,7 @@ def get_sort(request):
 
 
 def get_slide_categories(slide_ordering, slide_filter=None):
-    qs = Slide.objects.all()
+    qs = active_slides()
     if slide_filter:
         qs = qs.filter(**slide_filter)
     qs = qs.order_by(*slide_ordering)
@@ -195,7 +204,7 @@ def index(request):
     slide_ordering = SORT_OPTIONS[sort]
     categories = list(get_slide_categories(slide_ordering))
     uncategorized_slides = list(
-        Slide.objects.filter(category_ref__isnull=True).order_by(*slide_ordering)
+        active_slides().filter(category_ref__isnull=True).order_by(*slide_ordering)
     )
     category_sections = [
         {
@@ -205,7 +214,7 @@ def index(request):
         }
         for category in categories
     ]
-    total_slides = Slide.objects.count()
+    total_slides = active_slides().count()
     return render(request, 'index.html', {
         'category_sections': category_sections,
         'uncategorized_slides': uncategorized_slides,
@@ -215,6 +224,7 @@ def index(request):
         'sort_options': SORT_OPTIONS,
         'database_options': database_options(),
         'current_database': display_db_name(current_db_path()),
+        'trash_count': Slide.objects.filter(deleted_at__isnull=False).count(),
     })
 
 
@@ -249,7 +259,7 @@ def create_slide(request):
         default_content = f.read()
 
     # 创建新的幻灯片，并设置默认内容
-    next_order = (Slide.objects.filter(category_ref__isnull=True).aggregate(Max('sort_order'))['sort_order__max'] or 0) + 1
+    next_order = (active_slides().filter(category_ref__isnull=True).aggregate(Max('sort_order'))['sort_order__max'] or 0) + 1
     slide = Slide.objects.create(
         title='未命名',
         content=default_content,
@@ -261,19 +271,50 @@ def create_slide(request):
 
 @login_required
 def edit_slide(request, slide_id):
-    slide = Slide.objects.get(id=slide_id)
+    slide = get_object_or_404(active_slides(), id=slide_id)
     return render(request, 'edit_slide.html', {'slide': slide})
 
 @login_required
+@require_POST
 def delete_slide(request, slide_id):
-    slide = get_object_or_404(Slide, id=slide_id)
+    slide = get_object_or_404(active_slides(), id=slide_id)
+    slide.deleted_at = timezone.now()
+    slide.save(update_fields=['deleted_at'])
+    return JsonResponse({'status': 'success'})
+
+
+@login_required
+def trash(request):
+    slides = Slide.objects.filter(deleted_at__isnull=False).order_by('-deleted_at')
+    return render(request, 'trash.html', {'slides': slides})
+
+
+@login_required
+@require_POST
+def restore_slide(request, slide_id):
+    slide = get_object_or_404(Slide, id=slide_id, deleted_at__isnull=False)
+    slide.deleted_at = None
+    # 原分类可能已被删除（SET_NULL 已处理外键），冗余的 category 文本一并清掉
+    if slide.category_ref is None:
+        slide.category = ''
+        slide.save(update_fields=['deleted_at', 'category'])
+    else:
+        slide.save(update_fields=['deleted_at'])
+    return JsonResponse({'status': 'success'})
+
+
+@login_required
+@require_POST
+def purge_slide(request, slide_id):
+    slide = get_object_or_404(Slide, id=slide_id, deleted_at__isnull=False)
     slide.delete()
     return JsonResponse({'status': 'success'})
+
 
 @login_required
 @require_POST
 def toggle_lock(request, slide_id):
-    slide = get_object_or_404(Slide, id=slide_id)
+    slide = get_object_or_404(active_slides(), id=slide_id)
     # 切换锁定状态
     slide.lock = not slide.lock
     slide.save()
@@ -283,7 +324,7 @@ def toggle_lock(request, slide_id):
 @login_required
 @require_POST
 def update_category(request, slide_id):
-    slide = get_object_or_404(Slide, id=slide_id)
+    slide = get_object_or_404(active_slides(), id=slide_id)
     category = request.POST.get('category', '').strip()
     slide.category = category[:100]
     slide.save(update_fields=['category', 'updated_at'])
@@ -338,11 +379,12 @@ def delete_category(request, category_id):
         return JsonResponse({'error': '无效的删除方式'}, status=400)
 
     with transaction.atomic():
-        slide_count = category.slides.count()
+        category_slides = category.slides.filter(deleted_at__isnull=True)
+        slide_count = category_slides.count()
         if action == 'uncategorize':
-            next_order = (Slide.objects.filter(category_ref__isnull=True).aggregate(Max('sort_order'))['sort_order__max'] or 0) + 1
+            next_order = (active_slides().filter(category_ref__isnull=True).aggregate(Max('sort_order'))['sort_order__max'] or 0) + 1
             to_update = []
-            for offset, slide in enumerate(category.slides.order_by('sort_order', '-updated_at', '-id')):
+            for offset, slide in enumerate(category_slides.order_by('sort_order', '-updated_at', '-id')):
                 slide.category_ref = None
                 slide.category = ''
                 slide.sort_order = next_order + offset
@@ -350,7 +392,8 @@ def delete_category(request, category_id):
             if to_update:
                 Slide.objects.bulk_update(to_update, ['category_ref', 'category', 'sort_order'])
         else:
-            category.slides.all().delete()
+            # 软删除进回收站（回收站里仍可恢复或彻底删除）
+            category_slides.update(deleted_at=timezone.now())
 
         category.delete()
 
@@ -382,7 +425,7 @@ def reorder_slides(request):
             return JsonResponse({'error': 'slide id 无效'}, status=400)
 
     with transaction.atomic():
-        slides = {slide.id: slide for slide in Slide.objects.filter(id__in=clean_ids)}
+        slides = {slide.id: slide for slide in active_slides().filter(id__in=clean_ids)}
         to_update = []
         for position, slide_id in enumerate(clean_ids):
             slide = slides.get(slide_id)
@@ -404,7 +447,7 @@ def public_slides(request):
     categories = list(get_slide_categories(slide_ordering, slide_filter={'lock': False}))
     categories = [c for c in categories if c.prefetched_slides]
     uncategorized_slides = list(
-        Slide.objects.filter(lock=False, category_ref__isnull=True).order_by(*slide_ordering)
+        active_slides().filter(lock=False, category_ref__isnull=True).order_by(*slide_ordering)
     )
     category_sections = [
         {
@@ -414,7 +457,7 @@ def public_slides(request):
         }
         for category in categories
     ]
-    total_slides = Slide.objects.filter(lock=False).count()
+    total_slides = active_slides().filter(lock=False).count()
     return render(request, 'public_slides.html', {
         'category_sections': category_sections,
         'uncategorized_slides': uncategorized_slides,
@@ -425,7 +468,7 @@ def public_slides(request):
     })
 
 def public_edit_slide(request, slide_id):
-    slide = get_object_or_404(Slide, id=slide_id, lock=False)
+    slide = get_object_or_404(active_slides(), id=slide_id, lock=False)
 
     try:
         slide_html = convert_and_cache(slide, slide.content)

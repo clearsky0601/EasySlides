@@ -53,13 +53,23 @@ def connect(args) -> sqlite3.Connection:
     return conn
 
 
+def has_deleted_at(conn) -> bool:
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(slideapp_slide)")}
+    return "deleted_at" in cols
+
+
 def cmd_list(args):
     conn = connect(args)
     sql = "SELECT id, title, category, lock, version, sort_order FROM slideapp_slide"
     params: list = []
+    where = []
+    if has_deleted_at(conn):
+        where.append("deleted_at IS NULL")
     if args.category:
-        sql += " WHERE category = ?"
+        where.append("category = ?")
         params.append(args.category)
+    if where:
+        sql += " WHERE " + " AND ".join(where)
     sql += " ORDER BY id"
     for r in conn.execute(sql, params):
         vis = "public" if r["lock"] == 0 else "locked"
@@ -126,11 +136,21 @@ def cmd_update(args):
 
 def cmd_delete(args):
     conn = connect(args)
-    cur = conn.execute("DELETE FROM slideapp_slide WHERE id = ?", (args.id,))
+    purge = getattr(args, "purge", False)
+    if purge or not has_deleted_at(conn):
+        cur = conn.execute("DELETE FROM slideapp_slide WHERE id = ?", (args.id,))
+        verb = "Hard-deleted"
+    else:
+        cur = conn.execute(
+            "UPDATE slideapp_slide SET deleted_at = datetime('now') "
+            "WHERE id = ? AND deleted_at IS NULL",
+            (args.id,),
+        )
+        verb = "Soft-deleted (recoverable in web trash)"
     conn.commit()
     n = cur.rowcount
     conn.close()
-    print(f"Deleted {n} row(s) for id={args.id}")
+    print(f"{verb} {n} row(s) for id={args.id}")
 
 
 def cmd_publish(args):
@@ -195,8 +215,9 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--category")
     s.set_defaults(func=cmd_update)
 
-    s = sub.add_parser("delete", help="delete a slide")
+    s = sub.add_parser("delete", help="soft-delete a slide (move to trash); --purge to hard-delete")
     s.add_argument("id", type=int)
+    s.add_argument("--purge", action="store_true", help="permanently delete instead of trash")
     s.set_defaults(func=cmd_delete)
 
     s = sub.add_parser("publish", help="unlock (make public)")

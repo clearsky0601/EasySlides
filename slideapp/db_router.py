@@ -20,3 +20,10 @@ class SlideAppRouter:
         ):
             return True
         return None
+
+    def allow_migrate(self, db, app_label, model_name=None, **hints):
+        # slideapp 的表只迁移到 slides 库，其余 app 只迁移到 default，
+        # 避免同一套表在两个 alias 各落一份
+        if app_label in self.route_app_labels:
+            return db == 'slides'
+        return db == 'default'

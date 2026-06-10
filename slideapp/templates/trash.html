@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>回收站 · EasySlides</title>
+    <style>
+        :root {
+            --bg: #f6f2ea;
+            --panel: #fffdf8;
+            --ink: #1f211d;
+            --muted: #777267;
+            --line: #ddd4c4;
+            --accent: #285c4d;
+            --accent-strong: #143f35;
+            --danger: #9b3b2f;
+            --card-shadow: 0 4px 16px rgba(54, 46, 34, 0.06);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: ui-serif, Georgia, "Songti SC", "Noto Serif CJK SC", serif;
+            color: var(--ink);
+            background:
+                linear-gradient(90deg, rgba(40, 92, 77, 0.06) 1px, transparent 1px),
+                linear-gradient(180deg, rgba(40, 92, 77, 0.045) 1px, transparent 1px),
+                var(--bg);
+            background-size: 22px 22px;
+        }
+        .page { width: min(900px, calc(100vw - 36px)); margin: 0 auto; padding: 18px 0 34px; }
+        .topbar {
+            display: flex; justify-content: space-between; align-items: end;
+            border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 18px;
+        }
+        h1 { margin: 0 0 6px; font-size: 30px; line-height: 1.05; }
+        .stats { color: var(--muted); font-size: 13px; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--panel); border: 1px solid var(--line);
+            box-shadow: var(--card-shadow); padding: 8px 12px;
+            color: var(--ink); text-decoration: none; font: inherit; cursor: pointer;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent-strong); }
+        .btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+        .trash-card {
+            display: flex; justify-content: space-between; align-items: center; gap: 14px;
+            background: var(--panel); border: 1px solid var(--line);
+            box-shadow: var(--card-shadow); padding: 12px 16px; margin-bottom: 10px;
+        }
+        .trash-title { font-size: 16px; margin-bottom: 4px; }
+        .trash-meta { color: var(--muted); font-size: 12.5px; }
+        .trash-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="page">
+    <header class="topbar">
+        <div>
+            <h1>回收站</h1>
+            <div class="stats">{{ slides|length }} 张已删除的幻灯片 · 恢复后回到未分类或原分类</div>
+        </div>
+        <a class="btn" href="{% url 'index' %}">← 返回管理页</a>
+    </header>
+
+    {% for slide in slides %}
+        <article class="trash-card" data-slide-id="{{ slide.id }}">
+            <div>
+                <div class="trash-title">{{ slide.title }}</div>
+                <div class="trash-meta">删除于 {{ slide.deleted_at|date:"Y-m-d H:i" }} · 创建于 {{ slide.created_at|date:"Y-m-d H:i" }}</div>
+            </div>
+            <div class="trash-actions">
+                <button class="btn" type="button" onclick="restoreSlide({{ slide.id }})">恢复</button>
+                <button class="btn danger" type="button" onclick="purgeSlide({{ slide.id }})">彻底删除</button>
+            </div>
+        </article>
+    {% empty %}
+        <div class="empty">回收站是空的</div>
+    {% endfor %}
+</div>
+
+<form hidden aria-hidden="true">{% csrf_token %}</form>
+
+<script>
+    function getCookie(name) {
+        const value = '; ' + document.cookie;
+        const parts = value.split('; ' + name + '=');
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    function post(url) {
+        return fetch(url, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+    }
+    function restoreSlide(id) {
+        post('/trash/' + id + '/restore/')
+            .then(r => r.ok ? location.reload() : alert('恢复失败'))
+            .catch(() => alert('恢复失败'));
+    }
+    function purgeSlide(id) {
+        if (!confirm('彻底删除后无法恢复，确定吗？')) return;
+        post('/trash/' + id + '/purge/')
+            .then(r => r.ok ? location.reload() : alert('删除失败'))
+            .catch(() => alert('删除失败'));
+    }
+</script>
+</body>
+</html>

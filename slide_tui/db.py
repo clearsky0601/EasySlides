@@ -124,19 +124,24 @@ def list_slides(db: Path) -> list[SlideRow]:
                 for c in select
             ]
         order = "sort_order, id" if "sort_order" in cols else "id"
+        # 软删除列存在时排除回收站里的幻灯片（与 web 管理页行为一致）
+        has_deleted_at = "deleted_at" in cols
         if has_categories:
             order = f"s.{order.replace(', ', ', s.')}"
+            where = "WHERE s.deleted_at IS NULL" if has_deleted_at else ""
             rows = conn.execute(
                 f"""
                 SELECT {', '.join(select)}
                 FROM slideapp_slide s
                 LEFT JOIN slideapp_slidecategory sc ON sc.id = s.category_ref_id
+                {where}
                 ORDER BY {order}
                 """
             ).fetchall()
         else:
+            where = "WHERE deleted_at IS NULL" if has_deleted_at else ""
             rows = conn.execute(
-                f"SELECT {', '.join(select)} FROM slideapp_slide ORDER BY {order}"
+                f"SELECT {', '.join(select)} FROM slideapp_slide {where} ORDER BY {order}"
             ).fetchall()
     except sqlite3.OperationalError:
         return []

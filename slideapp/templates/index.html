@@ -441,6 +441,10 @@
                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18"/></svg>
                     公开幻灯片
                 </a>
+                <a class="btn nav-link" href="{% url 'trash' %}">
+                    <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 15H6L5 6"/></svg>
+                    回收站{% if trash_count %} ({{ trash_count }}){% endif %}
+                </a>
                 <form class="logout-form" method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
                     <button type="submit" class="btn nav-link">
@@ -604,10 +608,38 @@
     }
 
     function confirmDelete(slideId) {
-        if (!confirm('确定删除这张幻灯片吗？')) return;
+        if (!confirm('把这张幻灯片移入回收站吗？（可在回收站恢复）')) return;
         fetch('/delete/' + slideId + '/', { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } })
-            .then(response => response.ok ? location.reload() : alert('删除失败'))
+            .then(response => {
+                if (!response.ok) { alert('删除失败'); return; }
+                const card = document.querySelector('.slide-card[data-slide-id="' + slideId + '"]');
+                if (card) card.remove();
+                showUndoToast(slideId);
+            })
             .catch(() => alert('删除失败'));
+    }
+
+    function showUndoToast(slideId) {
+        const old = document.getElementById('undo-toast');
+        if (old) old.remove();
+        const toast = document.createElement('div');
+        toast.id = 'undo-toast';
+        toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);' +
+            'background:var(--ink);color:var(--bg);padding:10px 16px;display:flex;gap:14px;' +
+            'align-items:center;box-shadow:var(--shadow);z-index:1000;font-size:14px;';
+        toast.innerHTML = '已移入回收站';
+        const undoBtn = document.createElement('button');
+        undoBtn.textContent = '撤销';
+        undoBtn.style.cssText = 'background:none;border:none;color:#9fd3c0;font:inherit;' +
+            'text-decoration:underline;cursor:pointer;padding:0;';
+        undoBtn.onclick = function () {
+            fetch('/trash/' + slideId + '/restore/', { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } })
+                .then(response => response.ok ? location.reload() : alert('恢复失败'))
+                .catch(() => alert('恢复失败'));
+        };
+        toast.appendChild(undoBtn);
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.remove(); location.reload(); }, 6000);
     }
 
     function toggleLock(slideId) {

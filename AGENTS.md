@@ -39,6 +39,7 @@ EasySlides 是一个 Django + Reveal.js 幻灯片应用，数据存储在 SQLite
 | category | VARCHAR(100) | 分类名（如 'demo', 'ClaudeCode'） |
 | category_ref_id | BIGINT | 关联 slideapp_slidecategory 表的外键（可为 NULL） |
 | sort_order | INTEGER | 排序顺序（默认 0，≥0） |
+| deleted_at | DATETIME | 软删除时间（NULL = 正常；非 NULL = 在回收站，列表查询应排除） |
 
 分类表：`slideapp_slidecategory`
 
@@ -54,7 +55,7 @@ EasySlides 是一个 Django + Reveal.js 幻灯片应用，数据存储在 SQLite
 
 ### 查看所有幻灯片
 ```bash
-sqlite3 db.sqlite3 "SELECT id, title, category, lock, version FROM slideapp_slide ORDER BY id;"
+sqlite3 db.sqlite3 "SELECT id, title, category, lock, version FROM slideapp_slide WHERE deleted_at IS NULL ORDER BY id;"
 ```
 
 ### 查看幻灯片内容
@@ -96,10 +97,11 @@ conn.close()
 "
 ```
 
-### 删除幻灯片
+### 删除幻灯片（软删除，进回收站，web 端可恢复）
 ```bash
-sqlite3 db.sqlite3 "DELETE FROM slideapp_slide WHERE id = <id>;"
+sqlite3 db.sqlite3 "UPDATE slideapp_slide SET deleted_at = datetime('now') WHERE id = <id>;"
 ```
+彻底删除（不可恢复）才用 `DELETE FROM slideapp_slide WHERE id = <id>;`
 
 ### 设置幻灯片公开（解锁）
 ```bash
