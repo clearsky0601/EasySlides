@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.db import connections, transaction
 from django.db.models import Max, Prefetch
-from django.http import JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -466,6 +466,23 @@ def public_slides(request):
         'sort': sort,
         'sort_options': SORT_OPTIONS,
     })
+
+def present_slide(request, slide_id):
+    """干净的整页演示视图：直接返回渲染产物 HTML 文档。
+
+    speaker view（S 键弹窗）和 ?print-pdf 打印导出都需要非嵌套的完整文档
+    才能按 Reveal 官方路径工作；公开幻灯片任何人可演示，未公开的仅登录用户。
+    """
+    slide = get_object_or_404(active_slides(), id=slide_id)
+    if slide.lock and not request.user.is_authenticated:
+        raise Http404
+    try:
+        html = convert_and_cache(slide, slide.content)
+    except Exception as e:
+        error_message = ''.join(traceback.format_exception_only(type(e), e))
+        return HttpResponse(f"<p>转换失败: {error_message}</p>", status=500)
+    return HttpResponse(html)
+
 
 def public_edit_slide(request, slide_id):
     slide = get_object_or_404(active_slides(), id=slide_id, lock=False)

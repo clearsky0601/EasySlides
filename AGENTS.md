@@ -347,7 +347,7 @@ Markdown 原生左右/多列布局，比 Tailwind 写法更短，输出统一走
 :::
 ```
 
-映射 Reveal.js 原生 `<aside class="notes">`，**听众看不到**（被默认 CSS 隐藏）。要获得"按 S 在第二屏看"的能力，需要在模板里挂上 RevealNotes 插件（当前未打包）。当前用法 = "隐藏但保留"，适合起草、留底数据来源。
+映射 Reveal.js 原生 `<aside class="notes">`，**听众看不到**（被默认 CSS 隐藏）。模板已挂载 RevealNotes 插件：在演示页（`/present/<id>/`）按 **S** 可弹出演讲者视图（备注 + 计时器 + 下一张预览）。PDF 导出：打开 `/present/<id>/?print-pdf` 后用浏览器打印另存为 PDF（纸张横向）。
 
 ### 列表逐条揭示 `:::incremental`
 
