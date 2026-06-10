@@ -117,13 +117,25 @@ def apply_database(path):
     connections['slides'].close()
 
 
+# 上传图片限制：白名单内的位图格式（不含 svg，避免内嵌脚本），单文件 10MB
+ALLOWED_IMAGE_TYPES = {
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+    'image/gif': '.gif',
+    'image/webp': '.webp',
+}
+MAX_IMAGE_SIZE = 10 * 1024 * 1024
+
+
 @login_required
 def upload_image(request):
     if request.method == 'POST':
         image = request.FILES.get('image')
-        if image and image.content_type.startswith('image/'):
-            # 生成唯一的文件名，防止冲突
-            ext = os.path.splitext(image.name)[1]
+        if image and image.content_type in ALLOWED_IMAGE_TYPES:
+            if image.size > MAX_IMAGE_SIZE:
+                return JsonResponse({'error': '图片超过 10MB 限制'}, status=400)
+            # 扩展名由白名单映射生成（不信任原文件名），uuid 防冲突
+            ext = ALLOWED_IMAGE_TYPES[image.content_type]
             filename = uuid.uuid4().hex + ext
             filepath = os.path.join(settings.MEDIA_ROOT, 'uploads', filename)
 
@@ -139,7 +151,8 @@ def upload_image(request):
             url = settings.MEDIA_URL + 'uploads/' + filename
             return JsonResponse({'url': url})
         else:
-            return JsonResponse({'error': '无效的文件'}, status=400)
+            return JsonResponse(
+                {'error': '不支持的图片格式（仅限 png/jpg/gif/webp）'}, status=400)
     else:
         return JsonResponse({'error': '不支持的请求方法'}, status=405)
 
