@@ -4,20 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Public Slides</title>
+    {% include "_theme_head.html" %}
     <style>
-        :root {
-            --bg: #f6f2ea;
-            --panel: #fffdf8;
-            --ink: #1f211d;
-            --muted: #777267;
-            --line: #ddd4c4;
-            --line-strong: #c7baa6;
-            --accent: #285c4d;
-            --accent-soft: rgba(40, 92, 77, 0.08);
-            --shadow: 0 12px 28px rgba(54, 46, 34, 0.08);
-            --card-shadow: 0 4px 16px rgba(54, 46, 34, 0.06);
-        }
-
         * { box-sizing: border-box; }
 
         body {
@@ -26,8 +14,8 @@
             font-family: ui-serif, Georgia, "Songti SC", "Noto Serif CJK SC", serif;
             color: var(--ink);
             background:
-                linear-gradient(90deg, rgba(40, 92, 77, 0.06) 1px, transparent 1px),
-                linear-gradient(180deg, rgba(40, 92, 77, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line-v) 1px, transparent 1px),
+                linear-gradient(180deg, var(--grid-line-h) 1px, transparent 1px),
                 var(--bg);
             background-size: 22px 22px;
         }
@@ -65,7 +53,7 @@
             display: grid;
             grid-template-columns: 210px minmax(0, 1fr);
             min-height: 178px;
-            background: rgba(255, 253, 248, 0.72);
+            background: color-mix(in srgb, var(--panel) 72%, transparent);
             border: 1px solid var(--line);
             box-shadow: var(--shadow);
         }
@@ -75,7 +63,7 @@
             align-content: start;
             gap: 10px;
             border-right: 1px solid var(--line);
-            background: rgba(255, 253, 248, 0.88);
+            background: color-mix(in srgb, var(--panel) 88%, transparent);
             padding: 14px;
         }
 
@@ -164,7 +152,7 @@
             border: 1px dashed var(--line-strong);
             color: var(--muted);
             font-size: 13px;
-            background: rgba(255, 253, 248, 0.42);
+            background: color-mix(in srgb, var(--panel) 42%, transparent);
         }
 
         @media (max-width: 860px) {

@@ -4,18 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>回收站 · EasySlides</title>
+    {% include "_theme_head.html" %}
     <style>
-        :root {
-            --bg: #f6f2ea;
-            --panel: #fffdf8;
-            --ink: #1f211d;
-            --muted: #777267;
-            --line: #ddd4c4;
-            --accent: #285c4d;
-            --accent-strong: #143f35;
-            --danger: #9b3b2f;
-            --card-shadow: 0 4px 16px rgba(54, 46, 34, 0.06);
-        }
         * { box-sizing: border-box; }
         body {
             margin: 0;
@@ -23,8 +13,8 @@
             font-family: ui-serif, Georgia, "Songti SC", "Noto Serif CJK SC", serif;
             color: var(--ink);
             background:
-                linear-gradient(90deg, rgba(40, 92, 77, 0.06) 1px, transparent 1px),
-                linear-gradient(180deg, rgba(40, 92, 77, 0.045) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line-v) 1px, transparent 1px),
+                linear-gradient(180deg, var(--grid-line-h) 1px, transparent 1px),
                 var(--bg);
             background-size: 22px 22px;
         }
