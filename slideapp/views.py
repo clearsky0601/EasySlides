@@ -467,6 +467,22 @@ def public_slides(request):
         'sort_options': SORT_OPTIONS,
     })
 
+def search_index(request):
+    """搜索全文索引（JSON）。
+
+    列表页 HTML 不再内联全部正文（体积随库线性增长），工具栏首次键入时
+    fetch 本端点做全文匹配。匿名请求只返回公开且未删除的幻灯片，防泄露。
+    """
+    qs = active_slides()
+    if not request.user.is_authenticated:
+        qs = qs.filter(lock=False)
+    slides = [
+        {'id': s['id'], 'title': s['title'], 'text': s['content']}
+        for s in qs.values('id', 'title', 'content')
+    ]
+    return JsonResponse({'slides': slides})
+
+
 def present_slide(request, slide_id):
     """干净的整页演示视图：直接返回渲染产物 HTML 文档。
 

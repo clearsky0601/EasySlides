@@ -189,6 +189,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const cards = Array.from(document.querySelectorAll('.slide-card[data-search]'));
     const lanes = Array.from(document.querySelectorAll('.lane'));
 
+    // 正文全文索引：列表 HTML 只内联标题（避免页面体积随全库正文线性增长），
+    // 首次键入时 fetch 一次 /api/search-index/（匿名只含公开幻灯片），到达后增强匹配。
+    let fullIndex = null;
+    let indexLoading = false;
+    function ensureIndex() {
+        if (fullIndex || indexLoading) return;
+        indexLoading = true;
+        fetch('/api/search-index/')
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(data => {
+                fullIndex = {};
+                (data.slides || []).forEach(s => {
+                    fullIndex[s.id] = (s.title + ' ' + s.text).toLowerCase();
+                });
+                apply(input.value); // 索引到位后用全文重新过滤一次
+            })
+            .catch(() => { indexLoading = false; }); // 失败则退化为仅标题匹配，下次键入重试
+    }
+
     function apply(q) {
         q = q.trim().toLowerCase();
         clearBtn.classList.toggle('show', q.length > 0);
@@ -200,7 +219,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         let matched = 0;
         cards.forEach(c => {
-            const hit = (c.getAttribute('data-search') || '').toLowerCase().includes(q);
+            const titleHit = (c.getAttribute('data-search') || '').toLowerCase().includes(q);
+            const id = c.getAttribute('data-slide-id');
+            const textHit = !!(fullIndex && id && fullIndex[id] && fullIndex[id].includes(q));
+            const hit = titleHit || textHit;
             c.style.display = hit ? '' : 'none';
             if (hit) matched++;
         });
@@ -210,11 +232,12 @@ document.addEventListener('DOMContentLoaded', function () {
             laneCards.forEach(c => { if (c.style.display !== 'none') anyVisible = true; });
             l.style.display = anyVisible ? '' : 'none';
         });
-        countEl.textContent = '匹配 ' + matched + ' 张';
+        countEl.textContent = '匹配 ' + matched + ' 张' + (fullIndex ? '' : '（正文索引加载中…）');
     }
 
     let timer = null;
     input.addEventListener('input', () => {
+        ensureIndex();
         clearTimeout(timer);
         timer = setTimeout(() => apply(input.value), 80);
     });

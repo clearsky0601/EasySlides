@@ -23,6 +23,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('toggle_lock/<int:slide_id>/', views.toggle_lock, name='toggle_lock'),
     path('present/<int:slide_id>/', views.present_slide, name='present_slide'),
+    path('api/search-index/', views.search_index, name='search_index'),
     path('public/', views.public_slides, name='public_slides'),
     path('public/edit/<int:slide_id>/', views.public_edit_slide, name='public_edit_slide'),
 
