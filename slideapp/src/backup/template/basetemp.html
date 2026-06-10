@@ -53,6 +53,7 @@
 </div>
 
 <script src="./static/reveal/reveal.js"></script>
+<script src="./static/reveal/plugin/notes/notes.js"></script>
 
 <script>
     Reveal.initialize({
@@ -67,7 +68,9 @@
         autoAnimateUnmatched: true,
         autoAnimateEasing: 'ease-out',
         autoAnimateDuration: 0.3,
-        transitionSpeed: 'fast'
+        transitionSpeed: 'fast',
+
+        plugins: [ RevealNotes ]
     });
 </script>
 </body>

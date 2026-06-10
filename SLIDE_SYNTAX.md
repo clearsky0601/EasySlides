@@ -422,7 +422,9 @@ def hello():
 :::
 ```
 
-直接映射到 Reveal.js 原生 `<aside class="notes">`。比 `<!-- HTML 注释 -->` 多一层语义：以后只要在模板里挂上 RevealNotes 插件（项目当前未打包），即可获得"按 S 在第二屏看备注"能力。当前的实际效果是**隐藏但保留**。
+直接映射到 Reveal.js 原生 `<aside class="notes">`。模板已挂载 RevealNotes 插件：在演示页（`/present/<id>/`，管理页卡片和公开浏览页都有"演示"入口）按 **S** 弹出演讲者视图，可看到备注、计时器和下一张预览。
+
+相关能力：**PDF 导出** —— 打开 `/present/<id>/?print-pdf`（或公开浏览页的"导出 PDF"按钮），再用浏览器打印（Cmd/Ctrl+P）另存为 PDF，纸张方向选横向，每页一张幻灯片。
 
 ### 12.4 列表逐条揭示（`:::incremental`）
 

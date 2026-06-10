@@ -506,6 +506,29 @@ class SoftDeleteTests(TestCase):
             self.client.post(f"/trash/{self.slide.id}/purge/").status_code, 404)
 
 
+class PresentSlideTests(TestCase):
+    databases = {"default", "slides"}
+
+    def test_public_slide_presentable_by_anyone(self):
+        slide = Slide.objects.create(title="公开演示", content="# 公开演示", lock=False)
+        resp = self.client.get(f"/present/{slide.id}/")
+        self.assertEqual(resp.status_code, 200)
+        html = resp.content.decode()
+        self.assertIn("Reveal.initialize", html)
+        self.assertIn("RevealNotes", html)
+
+    def test_locked_slide_hidden_from_anonymous(self):
+        slide = Slide.objects.create(title="私有演示", content="# 私有演示", lock=True)
+        self.assertEqual(self.client.get(f"/present/{slide.id}/").status_code, 404)
+
+    def test_locked_slide_presentable_when_logged_in(self):
+        from django.contrib.auth.models import User
+        user = User.objects.create_user("presenter", password="pw")
+        self.client.force_login(user)
+        slide = Slide.objects.create(title="私有演示", content="# 私有演示", lock=True)
+        self.assertEqual(self.client.get(f"/present/{slide.id}/").status_code, 200)
+
+
 class UploadImageTests(TestCase):
     databases = {"default", "slides"}
 

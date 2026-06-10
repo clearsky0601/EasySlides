@@ -492,6 +492,9 @@
                         <div class="slide-meta">
                             <div>创建 {{ slide.created_at|date:"Y-m-d H:i" }}<br>修改 {{ slide.updated_at|date:"Y-m-d H:i" }}</div>
                             <div class="card-actions">
+                                <a class="icon-btn" href="{% url 'present_slide' slide.id %}" target="_blank" title="演示（按 S 开演讲者视图）" style="text-decoration:none;">
+                                    <svg viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                                </a>
                                 <button class="icon-btn" type="button" title="{% if slide.lock %}锁定{% else %}公开{% endif %}" onclick="toggleLock({{ slide.id }})">
                                     {% if slide.lock %}
                                         <svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
