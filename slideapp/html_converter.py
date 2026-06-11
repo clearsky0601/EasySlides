@@ -13,7 +13,8 @@ from .src.converter import converter
 # Bump when the rendering pipeline changes in a way that would invalidate
 # previously cached HTML for unchanged Markdown (e.g. new directive support).
 # v5: basetemp.html 加载 RevealNotes 插件（演讲者视图）
-RENDER_VERSION = "5"
+# v6: ?print-pdf 自动弹出打印对话框
+RENDER_VERSION = "6"
 
 
 @lru_cache(maxsize=64)
