@@ -43,8 +43,7 @@
 <body>
 <!-- 工具栏，包含返回公共页面的按钮 -->
 <div id="toolbar">
-    <button class="return-button" onclick="window.open('{% url 'present_slide' slide.id %}', '_blank')" title="干净的整页演示，按 S 打开演讲者视图">演示</button>
-    <button class="return-button" onclick="window.open('{% url 'present_slide' slide.id %}?print-pdf', '_blank')" title="打开后用浏览器打印（Cmd/Ctrl+P）另存为 PDF，纸张选横向">导出 PDF</button>
+    <button class="return-button" onclick="window.open('{% url 'present_slide' slide.id %}?print-pdf', '_blank')" title="自动弹出打印对话框，目标选「另存为 PDF」">导出 PDF</button>
     <button class="return-button" onclick="location.href='{% url 'public_slides' %}'">返回</button>
 </div>
 

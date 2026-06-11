@@ -422,9 +422,9 @@ def hello():
 :::
 ```
 
-直接映射到 Reveal.js 原生 `<aside class="notes">`。模板已挂载 RevealNotes 插件：在演示页（`/present/<id>/`，管理页卡片和公开浏览页都有"演示"入口）按 **S** 弹出演讲者视图，可看到备注、计时器和下一张预览。
+直接映射到 Reveal.js 原生 `<aside class="notes">`，**听众看不到**（被默认 CSS 隐藏），适合起草、留底数据来源。模板挂载了 RevealNotes 插件，在渲染页按 **S** 仍可查看备注。
 
-相关能力：**PDF 导出** —— 打开 `/present/<id>/?print-pdf`（或公开浏览页的"导出 PDF"按钮），再用浏览器打印（Cmd/Ctrl+P）另存为 PDF，纸张方向选横向，每页一张幻灯片。
+相关能力：**PDF 导出** —— 管理页卡片和公开浏览页都有「导出 PDF」按钮（即打开 `/present/<id>/?print-pdf`），页面加载完会**自动弹出打印对话框**，目标选「另存为 PDF」、纸张方向横向，每页一张幻灯片。
 
 ### 12.4 列表逐条揭示（`:::incremental`）
 
